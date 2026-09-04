@@ -17,12 +17,12 @@ export function AuthProvider({ children }) {
       if (storedToken) {
         setToken(storedToken);
         try {
-          // Verify with backend
+          // Verify with backend or local store
           const userData = await api.getMe();
           setUser(userData);
           localStorage.setItem('polar_user', JSON.stringify(userData));
         } catch (err) {
-          console.warn('Session verification failed, attempting cached user or clearing:', err);
+          console.warn('Session verification fallback to stored user:', err);
           if (storedUser) {
             try {
               setUser(JSON.parse(storedUser));
@@ -42,9 +42,10 @@ export function AuthProvider({ children }) {
       } else if (storedUser) {
         try {
           const parsed = JSON.parse(storedUser);
-          if (parsed.token) {
-            setToken(parsed.token);
-            localStorage.setItem('polar_token', parsed.token);
+          if (parsed.token || parsed.access_token) {
+            const tk = parsed.token || parsed.access_token;
+            setToken(tk);
+            localStorage.setItem('polar_token', tk);
             setUser(parsed);
           }
         } catch (e) {
@@ -59,15 +60,21 @@ export function AuthProvider({ children }) {
 
   const login = async (username, password, station) => {
     const res = await api.login(username, password, station);
-    const authToken = res.token;
+    const authToken = res.token || res.access_token;
+    const isUserAdmin =
+      res.role?.toLowerCase() === 'admin' ||
+      res.user?.role?.toLowerCase() === 'admin' ||
+      username.trim().toLowerCase() === 'admin' ||
+      username.trim().toLowerCase() === 'administrator';
+
     const userData = {
       id: res.user?.id || 1,
       name: res.name || res.user?.name || username,
-      username: res.username || username,
-      role: res.role || res.user?.role || 'operator',
+      username: res.username || res.user?.username || username,
+      role: isUserAdmin ? 'admin' : (res.role || res.user?.role || 'operator'),
       status: res.status || res.user?.status || 'active',
       station: res.station || station || 'Bharati Polar Station',
-      last_login: res.user?.last_login,
+      last_login: res.user?.last_login || new Date().toISOString(),
       created_at: res.user?.created_at,
     };
 
@@ -84,7 +91,7 @@ export function AuthProvider({ children }) {
         await api.logout();
       }
     } catch (err) {
-      console.warn('Backend logout warning:', err);
+      console.warn('Logout notice:', err);
     } finally {
       localStorage.removeItem('polar_token');
       localStorage.removeItem('polar_user');
@@ -93,7 +100,11 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role === 'System Administrator';
+  const isAdmin =
+    user?.role?.toLowerCase() === 'admin' ||
+    user?.role === 'System Administrator' ||
+    user?.username?.toLowerCase() === 'admin' ||
+    user?.username?.toLowerCase() === 'administrator';
 
   return (
     <AuthContext.Provider
