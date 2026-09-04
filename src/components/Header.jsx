@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import {
   Menu,
   Thermometer,
@@ -15,15 +16,20 @@ import {
   Activity,
   CheckCircle2,
   Clock,
-  Sparkles
+  Sparkles,
+  Languages,
+  Check
 } from 'lucide-react';
 
 export default function Header({ setMobileOpen, weatherData }) {
   const navigate = useNavigate();
   const { user, isAdmin, logout } = useAuth();
+  const { language, setLanguage, t, availableLanguages, currentLangMeta } = useLanguage();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showLangMenu, setShowLangMenu] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
   const profileRef = useRef(null);
+  const langRef = useRef(null);
 
   // Dynamic live clock
   useEffect(() => {
@@ -44,6 +50,9 @@ export default function Header({ setMobileOpen, weatherData }) {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setShowProfileMenu(false);
       }
+      if (langRef.current && !langRef.current.contains(event.target)) {
+        setShowLangMenu(false);
+      }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -60,7 +69,7 @@ export default function Header({ setMobileOpen, weatherData }) {
     humidity: 62,
   };
 
-  const roleDisplay = isAdmin ? 'ADMINISTRATOR' : 'OPERATOR';
+  const roleDisplay = isAdmin ? t('header.admin') : t('header.operator');
   const usernameDisplay = user?.username || (isAdmin ? 'admin' : 'operator');
 
   return (
@@ -82,11 +91,11 @@ export default function Header({ setMobileOpen, weatherData }) {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-extrabold text-sm sm:text-base tracking-wider text-white">
-                POLAR ENERGY <span className="text-[#48D5FF] font-black">AI</span>
+                {t('header.title')} <span className="text-[#48D5FF] font-black">AI</span>
               </h1>
             </div>
             <p className="text-[10px] text-[#89A7B7] font-semibold tracking-widest uppercase">
-              AUTONOMOUS MICROGRID CONTROL
+              {t('header.subtitle')}
             </p>
           </div>
         </div>
@@ -97,22 +106,22 @@ export default function Header({ setMobileOpen, weatherData }) {
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-[#35D47A] pulse-active" />
           <span className="text-xs font-black tracking-widest text-[#EFFFFF] uppercase">
-            ARCTIC MICROGRID SIMULATION
+            {t('header.simulation')}
           </span>
         </div>
         <p className="text-[10px] text-[#48D5FF] font-mono tracking-wider">
-          REMOTE ENERGY SYSTEM • LIVE DIGITAL TWIN
+          {t('header.digitalTwin')}
         </p>
       </div>
 
-      {/* RIGHT: System Mode + Weather + Clock + Profile */}
+      {/* RIGHT: System Mode + Weather + Language Selector + Clock + Profile */}
       <div className="flex items-center gap-2 sm:gap-3">
         {/* System Mode Autonomous Pill */}
         <div className="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#0B1D29] border border-[#102B3B] text-xs">
-          <span className="text-[10px] text-[#89A7B7] uppercase font-bold">SYSTEM MODE</span>
+          <span className="text-[10px] text-[#89A7B7] uppercase font-bold">{t('header.systemMode')}</span>
           <span className="flex items-center gap-1 text-[11px] font-extrabold text-[#35D47A]">
             <span className="w-1.5 h-1.5 rounded-full bg-[#35D47A] pulse-active" />
-            AUTONOMOUS
+            {t('header.autonomous')}
           </span>
         </div>
 
@@ -125,21 +134,67 @@ export default function Header({ setMobileOpen, weatherData }) {
           <span className="text-slate-700">|</span>
           <div className="flex items-center gap-1 text-[#299BD7]">
             <Wind className="w-3.5 h-3.5" />
-            <span className="font-mono font-bold">WIND {weather.wind_speed} km/h</span>
+            <span className="font-mono font-bold">{weather.wind_speed} km/h</span>
           </div>
+        </div>
+
+        {/* Quick Language Switcher Dropdown */}
+        <div className="relative" ref={langRef}>
+          <button
+            onClick={() => setShowLangMenu(!showLangMenu)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#0B1D29] hover:bg-[#0E2432] transition-colors border border-[#102B3B] text-xs cursor-pointer"
+            title="Change Interface Language"
+          >
+            <span className="text-base leading-none">{currentLangMeta?.flag || '🌐'}</span>
+            <span className="hidden md:inline font-mono font-bold text-[#EFFFFF] text-[11px]">
+              {language.toUpperCase()}
+            </span>
+            <ChevronDown className="w-3 h-3 text-[#89A7B7]" />
+          </button>
+
+          {showLangMenu && (
+            <div className="absolute right-0 mt-2 w-52 rounded-xl bg-[#0B1D29] border border-[#102B3B] shadow-2xl shadow-black/90 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150 py-1">
+              <div className="px-3 py-1.5 border-b border-[#102B3B] text-[10px] font-bold uppercase tracking-wider text-[#89A7B7] flex items-center gap-1.5">
+                <Languages className="w-3 h-3 text-[#48D5FF]" />
+                {t('header.chooseLanguage')}
+              </div>
+              <div className="max-h-64 overflow-y-auto py-1">
+                {availableLanguages.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      setLanguage(lang.code);
+                      setShowLangMenu(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 text-xs transition-colors cursor-pointer ${
+                      language === lang.code
+                        ? 'bg-[#102B3B] text-[#48D5FF] font-bold'
+                        : 'text-[#89A7B7] hover:text-[#EFFFFF] hover:bg-[#0E2432]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">{lang.flag}</span>
+                      <span>{lang.native}</span>
+                    </div>
+                    {language === lang.code && <Check className="w-3.5 h-3.5 text-[#48D5FF]" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Dynamic Clock */}
         <div className="hidden lg:flex flex-col text-right px-2.5 py-1 rounded-lg bg-[#0B1D29] border border-[#102B3B]">
           <span className="text-xs font-mono font-bold text-[#EFFFFF]">{currentTime || '18:42'}</span>
-          <span className="text-[9px] text-[#89A7B7] font-semibold uppercase tracking-wider">LOCAL TIME</span>
+          <span className="text-[9px] text-[#89A7B7] font-semibold uppercase tracking-wider">{t('header.localTime')}</span>
         </div>
 
         {/* User Profile Menu */}
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="flex items-center gap-2 p-1.5 pr-2 rounded-xl bg-[#0B1D29] hover:bg-[#0E2432] transition-colors border border-[#102B3B]"
+            className="flex items-center gap-2 p-1.5 pr-2 rounded-xl bg-[#0B1D29] hover:bg-[#0E2432] transition-colors border border-[#102B3B] cursor-pointer"
           >
             <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#299BD7] to-[#48D5FF] flex items-center justify-center text-black font-bold text-xs shadow-md shadow-[#48D5FF]/20">
               <User className="w-4 h-4 text-black" />
@@ -160,7 +215,7 @@ export default function Header({ setMobileOpen, weatherData }) {
                 </div>
                 <p className="text-[11px] font-mono text-[#89A7B7] mt-0.5">{usernameDisplay}</p>
                 <span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded bg-[#35D47A]/20 text-[#35D47A] font-mono font-bold">
-                  Status: ACTIVE
+                  Status: {t('header.active').toUpperCase()}
                 </span>
               </div>
 
@@ -171,10 +226,10 @@ export default function Header({ setMobileOpen, weatherData }) {
                       setShowProfileMenu(false);
                       navigate('/admin/operators');
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[#EFFFFF] hover:bg-[#0E2432] text-left transition-colors"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[#EFFFFF] hover:bg-[#0E2432] text-left transition-colors cursor-pointer"
                   >
                     <User className="w-3.5 h-3.5 text-[#48D5FF]" />
-                    <span>Operator Management</span>
+                    <span>{t('nav.operators')}</span>
                   </button>
                 )}
                 <button
@@ -182,20 +237,20 @@ export default function Header({ setMobileOpen, weatherData }) {
                     setShowProfileMenu(false);
                     navigate('/settings');
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[#89A7B7] hover:text-[#EFFFFF] hover:bg-[#0E2432] text-left transition-colors"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[#89A7B7] hover:text-[#EFFFFF] hover:bg-[#0E2432] text-left transition-colors cursor-pointer"
                 >
                   <SettingsIcon className="w-3.5 h-3.5 text-[#48D5FF]" />
-                  <span>System Settings</span>
+                  <span>{t('nav.settings')}</span>
                 </button>
               </div>
 
               <div className="p-1.5 border-t border-[#102B3B] bg-[#06131D]">
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[#FF6257] hover:bg-[#FF6257]/10 text-xs font-bold transition-colors"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[#FF6257] hover:bg-[#FF6257]/10 text-xs font-bold transition-colors cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  <span>Logout Session</span>
+                  <span>{t('nav.logout')}</span>
                 </button>
               </div>
             </div>

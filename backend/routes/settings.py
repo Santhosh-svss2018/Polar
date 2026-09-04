@@ -20,7 +20,8 @@ def get_settings(db: Session = Depends(get_db)):
             "warning_alerts": True,
             "system_notifications": True,
             "forecast_horizon": "24h",
-            "model_algorithm": "RandomForestRegressor"
+            "model_algorithm": "RandomForestRegressor",
+            "language": "en"
         }
     return {
         "station_name": settings.station_name,
@@ -32,7 +33,8 @@ def get_settings(db: Session = Depends(get_db)):
         "warning_alerts": settings.warning_alerts,
         "system_notifications": settings.system_notifications,
         "forecast_horizon": settings.forecast_horizon,
-        "model_algorithm": settings.model_algorithm
+        "model_algorithm": settings.model_algorithm,
+        "language": getattr(settings, "language", "en") or "en"
     }
 
 @router.put("")
@@ -52,6 +54,7 @@ def update_settings(payload: SettingsSchema, db: Session = Depends(get_db)):
     if payload.system_notifications is not None: settings.system_notifications = payload.system_notifications
     if payload.forecast_horizon is not None: settings.forecast_horizon = payload.forecast_horizon
     if payload.model_algorithm is not None: settings.model_algorithm = payload.model_algorithm
+    if payload.language is not None: settings.language = payload.language
 
     db.commit()
     return {"status": "success", "message": "Settings persisted to SQLite"}

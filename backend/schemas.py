@@ -94,3 +94,4 @@ class SettingsSchema(BaseModel):
     system_notifications: Optional[bool] = True
     forecast_horizon: Optional[str] = "24h"
     model_algorithm: Optional[str] = "RandomForestRegressor"
+    language: Optional[str] = "en"

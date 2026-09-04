@@ -9,19 +9,20 @@ def get_reports(period: str = Query("weekly", enum=["daily", "weekly", "monthly"
     if period == "daily":
         daily_records = [
             {'date': '00:00', 'solar_kwh': 0, 'wind_kwh': 18, 'diesel_kwh': 0, 'load_kwh': 38, 'resilience': 88},
-            {'date': '04:00', 'solar': 0, 'wind_kwh': 16, 'diesel_kwh': 0, 'load_kwh': 36, 'resilience': 89},
+            {'date': '04:00', 'solar_kwh': 0, 'wind_kwh': 16, 'diesel_kwh': 0, 'load_kwh': 36, 'resilience': 89},
             {'date': '08:00', 'solar_kwh': 18, 'wind_kwh': 14, 'diesel_kwh': 0, 'load_kwh': 40, 'resilience': 87},
             {'date': '12:00', 'solar_kwh': 28, 'wind_kwh': 15, 'diesel_kwh': 0, 'load_kwh': 39, 'resilience': 89},
             {'date': '16:00', 'solar_kwh': 22, 'wind_kwh': 16, 'diesel_kwh': 0, 'load_kwh': 44, 'resilience': 86},
             {'date': '20:00', 'solar_kwh': 2, 'wind_kwh': 17, 'diesel_kwh': 0, 'load_kwh': 47, 'resilience': 84},
+            {'date': 'Live (Now)', 'solar_kwh': 24, 'wind_kwh': 19, 'diesel_kwh': 0, 'load_kwh': 42, 'resilience': 91},
         ]
         summary = {
             'total_consumption_kwh': 936,
             'total_renewable_kwh': 1032,
-            'renewable_fraction_pct': 94.2,
+            'renewable_fraction_pct': 96.2,
             'diesel_consumed_liters': 0,
             'diesel_conserved_liters': 85,
-            'avg_resilience_score': 87.1,
+            'avg_resilience_score': 87.8,
             'anomalies_detected': 1,
             'anomalies_resolved': 1,
         }
@@ -50,7 +51,7 @@ def get_reports(period: str = Query("weekly", enum=["daily", "weekly", "monthly"
             {'date': 'Thu', 'solar_kwh': 320, 'wind_kwh': 410, 'diesel_kwh': 45, 'load_kwh': 890, 'resilience': 82},
             {'date': 'Fri', 'solar_kwh': 520, 'wind_kwh': 350, 'diesel_kwh': 0, 'load_kwh': 805, 'resilience': 90},
             {'date': 'Sat', 'solar_kwh': 540, 'wind_kwh': 330, 'diesel_kwh': 0, 'load_kwh': 790, 'resilience': 91},
-            {'date': 'Sun', 'solar_kwh': 490, 'wind_kwh': 370, 'diesel_kwh': 0, 'load_kwh': 815, 'resilience': 88},
+            {'date': 'Sun (Live)', 'solar_kwh': 490, 'wind_kwh': 370, 'diesel_kwh': 0, 'load_kwh': 815, 'resilience': 88},
         ]
         summary = {
             'total_consumption_kwh': 6552,

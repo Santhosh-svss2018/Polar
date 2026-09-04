@@ -83,3 +83,4 @@ class SystemSetting(Base):
     system_notifications = Column(Boolean, default=True)
     forecast_horizon = Column(String(20), default="24h")
     model_algorithm = Column(String(100), default="RandomForestRegressor")
+    language = Column(String(10), default="en")

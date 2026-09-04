@@ -755,16 +755,63 @@ export const api = {
   // =========================================================================
   // Reports
   // =========================================================================
-  getReports: async (period = 'daily', startDate = null, endDate = null) => {
+  getReports: async (period = 'weekly', startDate = null, endDate = null) => {
     try {
       const params = { period };
       if (startDate) params.start_date = startDate;
       if (endDate) params.end_date = endDate;
       const res = await apiClient.get('/reports', { params });
-      if (res && res.data) return res.data;
+      if (res && res.data && res.data.daily_records) return res.data;
     } catch (e) {}
 
+    if (period === 'daily') {
+      return {
+        period: 'daily',
+        summary: {
+          total_consumption_kwh: 936,
+          total_renewable_kwh: 1032,
+          renewable_fraction_pct: 96.2,
+          diesel_consumed_liters: 0,
+          diesel_conserved_liters: 85,
+          avg_resilience_score: 87.8,
+          anomalies_detected: 1,
+          anomalies_resolved: 1,
+        },
+        daily_records: [
+          { date: '00:00', solar_kwh: 0, wind_kwh: 18, diesel_kwh: 0, load_kwh: 38, resilience: 88 },
+          { date: '04:00', solar_kwh: 0, wind_kwh: 16, diesel_kwh: 0, load_kwh: 36, resilience: 89 },
+          { date: '08:00', solar_kwh: 18, wind_kwh: 14, diesel_kwh: 0, load_kwh: 40, resilience: 87 },
+          { date: '12:00', solar_kwh: 28, wind_kwh: 15, diesel_kwh: 0, load_kwh: 39, resilience: 89 },
+          { date: '16:00', solar_kwh: 22, wind_kwh: 16, diesel_kwh: 0, load_kwh: 44, resilience: 86 },
+          { date: '20:00', solar_kwh: 2, wind_kwh: 17, diesel_kwh: 0, load_kwh: 47, resilience: 84 },
+          { date: 'Live (Now)', solar_kwh: 24, wind_kwh: 19, diesel_kwh: 0, load_kwh: 42, resilience: 91 },
+        ],
+      };
+    } else if (period === 'monthly') {
+      return {
+        period: 'monthly',
+        summary: {
+          total_consumption_kwh: 22920,
+          total_renewable_kwh: 24130,
+          renewable_fraction_pct: 93.6,
+          diesel_consumed_liters: 280,
+          diesel_conserved_liters: 2340,
+          avg_resilience_score: 88.7,
+          anomalies_detected: 7,
+          anomalies_resolved: 7,
+        },
+        daily_records: [
+          { date: 'Week 1', solar_kwh: 3450, wind_kwh: 2520, diesel_kwh: 0, load_kwh: 5700, resilience: 89 },
+          { date: 'Week 2', solar_kwh: 3380, wind_kwh: 2610, diesel_kwh: 90, load_kwh: 5850, resilience: 85 },
+          { date: 'Week 3', solar_kwh: 3620, wind_kwh: 2450, diesel_kwh: 0, load_kwh: 5650, resilience: 91 },
+          { date: 'Week 4 (Current)', solar_kwh: 3510, wind_kwh: 2590, diesel_kwh: 0, load_kwh: 5720, resilience: 90 },
+        ],
+      };
+    }
+
+    // Default: Weekly
     return {
+      period: 'weekly',
       summary: {
         total_consumption_kwh: 6552,
         total_renewable_kwh: 7224,
@@ -814,6 +861,7 @@ export const api = {
       system_notifications: true,
       forecast_horizon: '24h',
       model_algorithm: 'RandomForestRegressor',
+      language: 'en',
     };
   },
 

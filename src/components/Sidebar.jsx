@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import {
   LayoutDashboard,
   TrendingUp,
@@ -19,6 +20,7 @@ import {
 export default function Sidebar({ mobileOpen, setMobileOpen }) {
   const navigate = useNavigate();
   const { isAdmin, logout } = useAuth();
+  const { t } = useLanguage();
 
   const handleLogout = async () => {
     await logout();
@@ -26,19 +28,19 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
   };
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Prediction', path: '/prediction', icon: TrendingUp },
-    { name: 'Optimization', path: '/optimization', icon: Sliders },
-    { name: 'Alerts & Anomalies', path: '/alerts', icon: AlertTriangle, badge: '3' },
-    { name: 'Simulation', path: '/simulation', icon: FlaskConical },
-    { name: 'Reports', path: '/reports', icon: FileBarChart2 },
-    { name: 'Data Management', path: '/data', icon: Database },
+    { name: t('nav.dashboard'), path: '/dashboard', icon: LayoutDashboard },
+    { name: t('nav.prediction'), path: '/prediction', icon: TrendingUp },
+    { name: t('nav.optimization'), path: '/optimization', icon: Sliders },
+    { name: t('nav.alerts'), path: '/alerts', icon: AlertTriangle, badge: '3' },
+    { name: t('nav.simulation'), path: '/simulation', icon: FlaskConical },
+    { name: t('nav.reports'), path: '/reports', icon: FileBarChart2 },
+    { name: t('nav.data'), path: '/data', icon: Database },
   ];
 
   // Add Operator Management in hamburger/sidebar ONLY during Administrative login
   if (isAdmin) {
     navItems.push({
-      name: 'Operator Management',
+      name: t('nav.operators'),
       path: '/admin/operators',
       icon: Users,
       badge: 'Admin'
@@ -46,7 +48,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
   }
 
   // Settings
-  navItems.push({ name: 'Settings', path: '/settings', icon: Settings });
+  navItems.push({ name: t('nav.settings'), path: '/settings', icon: Settings });
 
   return (
     <>
@@ -84,11 +86,11 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
             <div className="mt-3 px-2.5 py-1 rounded-md bg-[#0B1D29] border border-[#102B3B] flex items-center justify-between text-xs">
               <span className="flex items-center gap-1.5 text-[#48D5FF] font-medium text-[11px]">
                 <Snowflake className="w-3.5 h-3.5 text-[#48D5FF]" />
-                Bharati Station
+                {t('nav.station')}
               </span>
               <span className="flex items-center gap-1 text-[10px] text-[#35D47A] font-semibold uppercase">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#35D47A] pulse-active" />
-                Online
+                {t('nav.online')}
               </span>
             </div>
           </div>
@@ -136,7 +138,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
           <div className="p-3 rounded-lg bg-[#0B1D29] border border-[#102B3B] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#35D47A] pulse-active" />
-              <span className="text-xs font-bold text-[#89A7B7]">SYSTEM HEALTH</span>
+              <span className="text-xs font-bold text-[#89A7B7]">{t('nav.health')}</span>
             </div>
             <span className="font-mono font-extrabold text-[#35D47A] text-xs">98.7%</span>
           </div>
@@ -146,7 +148,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
             className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold text-[#89A7B7] hover:text-[#FF6257] hover:bg-[#FF6257]/10 transition-colors border border-transparent hover:border-[#FF6257]/20 cursor-pointer"
           >
             <LogOut className="w-4 h-4 text-[#FF6257]" />
-            <span>Logout Session</span>
+            <span>{t('nav.logout')}</span>
           </button>
         </div>
       </aside>

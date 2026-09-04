@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { TelemetryProvider } from './context/TelemetryContext';
+import { LanguageProvider } from './context/LanguageContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Layout from './components/Layout';
 import Login from './pages/Login';
@@ -18,47 +19,49 @@ import OperatorManagement from './pages/admin/OperatorManagement';
 export default function App() {
   return (
     <AuthProvider>
-      <TelemetryProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Public Login Route */}
-            <Route path="/login" element={<Login />} />
+      <LanguageProvider>
+        <TelemetryProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Public Login Route */}
+              <Route path="/login" element={<Login />} />
 
-            {/* Protected Application Routes */}
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="prediction" element={<Prediction />} />
-              <Route path="optimization" element={<Optimization />} />
-              <Route path="alerts" element={<Alerts />} />
-              <Route path="simulation" element={<Simulation />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="data" element={<DataManagement />} />
-              <Route path="settings" element={<Settings />} />
-
-              {/* Admin-Only Route */}
+              {/* Protected Application Routes */}
               <Route
-                path="admin/operators"
+                path="/"
                 element={
-                  <ProtectedRoute adminOnly={true}>
-                    <OperatorManagement />
+                  <ProtectedRoute>
+                    <Layout />
                   </ProtectedRoute>
                 }
-              />
-            </Route>
+              >
+                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="prediction" element={<Prediction />} />
+                <Route path="optimization" element={<Optimization />} />
+                <Route path="alerts" element={<Alerts />} />
+                <Route path="simulation" element={<Simulation />} />
+                <Route path="reports" element={<Reports />} />
+                <Route path="data" element={<DataManagement />} />
+                <Route path="settings" element={<Settings />} />
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </BrowserRouter>
-      </TelemetryProvider>
+                {/* Admin-Only Route */}
+                <Route
+                  path="admin/operators"
+                  element={
+                    <ProtectedRoute adminOnly={true}>
+                      <OperatorManagement />
+                    </ProtectedRoute>
+                  }
+                />
+              </Route>
+
+              {/* Fallback */}
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </TelemetryProvider>
+      </LanguageProvider>
     </AuthProvider>
   );
 }
