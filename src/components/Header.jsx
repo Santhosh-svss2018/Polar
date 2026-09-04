@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
-  Bell,
   Menu,
   Thermometer,
   Wind,
@@ -11,27 +11,36 @@ import {
   Settings as SettingsIcon,
   LogOut,
   ChevronDown,
-  AlertOctagon,
-  AlertTriangle,
-  Info,
+  Zap,
+  Activity,
   CheckCircle2,
-  ExternalLink
+  Clock,
+  Sparkles
 } from 'lucide-react';
 
-export default function Header({ setMobileOpen, weatherData, alertCount = 3 }) {
+export default function Header({ setMobileOpen, weatherData }) {
   const navigate = useNavigate();
-  const [showNotifications, setShowNotifications] = useState(false);
+  const { user, isAdmin, logout } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-
-  const notifRef = useRef(null);
+  const [currentTime, setCurrentTime] = useState('');
   const profileRef = useRef(null);
 
-  // Close dropdowns on outside click
+  // Dynamic live clock
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      setCurrentTime(`${hours}:${minutes}`);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event) {
-      if (notifRef.current && !notifRef.current.contains(event.target)) {
-        setShowNotifications(false);
-      }
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setShowProfileMenu(false);
       }
@@ -40,222 +49,150 @@ export default function Header({ setMobileOpen, weatherData, alertCount = 3 }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('polar_user');
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 
   const weather = weatherData || {
-    temperature: -24.3,
-    wind_speed: 18,
-    humidity: 65,
+    temperature: -18,
+    wind_speed: 24,
+    humidity: 62,
   };
 
-  const recentAlerts = [
-    {
-      id: 1,
-      type: 'critical',
-      title: 'High Consumption Detected',
-      desc: 'Heater 03 is consuming 12.5 kW (140% above normal)',
-      time: '12m ago',
-      icon: AlertOctagon,
-      color: 'text-red-400',
-      bg: 'bg-red-500/10 border-red-500/30',
-    },
-    {
-      id: 2,
-      type: 'warning',
-      title: 'Energy Shortage Predicted',
-      desc: 'Low renewable generation expected in next 6 hours',
-      time: '34m ago',
-      icon: AlertTriangle,
-      color: 'text-amber-400',
-      bg: 'bg-amber-500/10 border-amber-500/30',
-    },
-    {
-      id: 3,
-      type: 'info',
-      title: 'Battery Discharge High',
-      desc: 'Battery is discharging faster than normal peak rate',
-      time: '1h ago',
-      icon: Info,
-      color: 'text-cyan-400',
-      bg: 'bg-cyan-500/10 border-cyan-500/30',
-    },
-  ];
+  const roleDisplay = isAdmin ? 'ADMINISTRATOR' : 'OPERATOR';
+  const usernameDisplay = user?.username || (isAdmin ? 'admin' : 'operator');
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-[#0B132B]/90 backdrop-blur-md border-b border-[#1C2F57] px-4 lg:px-8 flex items-center justify-between">
-      {/* Left section: Mobile menu toggle + Station title */}
+    <header className="sticky top-0 z-30 h-16 bg-[#06131D]/95 backdrop-blur-md border-b border-[#102B3B] px-4 lg:px-6 flex items-center justify-between">
+      {/* LEFT: Branding */}
       <div className="flex items-center gap-3">
         <button
           onClick={() => setMobileOpen(true)}
-          className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-[#152445] transition-colors"
+          className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-[#0B1D29] transition-colors"
           aria-label="Toggle menu"
         >
-          <Menu className="w-5 h-5" />
+          <Menu className="w-5 h-5 text-[#48D5FF]" />
         </button>
 
-        <div className="flex items-center gap-2.5">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#111C3A] border border-[#1E325A]">
-            <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
-            <span className="text-xs font-semibold text-slate-200">Bharati Polar Station</span>
-            <span className="text-[11px] font-mono text-slate-400">69°24'S, 76°11'E</span>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#299BD7] to-[#48D5FF] flex items-center justify-center shadow-lg shadow-[#48D5FF]/20 text-black">
+            <Zap className="w-5 h-5 text-black fill-current" />
           </div>
-
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-medium text-emerald-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-active" />
-            AI Active & Resilient
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="font-extrabold text-sm sm:text-base tracking-wider text-white">
+                POLAR ENERGY <span className="text-[#48D5FF] font-black">AI</span>
+              </h1>
+            </div>
+            <p className="text-[10px] text-[#89A7B7] font-semibold tracking-widest uppercase">
+              AUTONOMOUS MICROGRID CONTROL
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Right section: Live Weather + Alerts + Profile */}
-      <div className="flex items-center gap-2 sm:gap-4">
-        {/* Weather conditions pill */}
-        <div className="hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-[#0F1A38] border border-[#1C2F57] text-xs">
-          <div className="flex items-center gap-1 text-cyan-300">
-            <Thermometer className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="font-semibold font-mono">{weather.temperature} °C</span>
+      {/* CENTER: Simulation Subtitle / Live Twin Banner */}
+      <div className="hidden md:flex flex-col items-center justify-center text-center">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#35D47A] pulse-active" />
+          <span className="text-xs font-black tracking-widest text-[#EFFFFF] uppercase">
+            ARCTIC MICROGRID SIMULATION
+          </span>
+        </div>
+        <p className="text-[10px] text-[#48D5FF] font-mono tracking-wider">
+          REMOTE ENERGY SYSTEM • LIVE DIGITAL TWIN
+        </p>
+      </div>
+
+      {/* RIGHT: System Mode + Weather + Clock + Profile */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* System Mode Autonomous Pill */}
+        <div className="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#0B1D29] border border-[#102B3B] text-xs">
+          <span className="text-[10px] text-[#89A7B7] uppercase font-bold">SYSTEM MODE</span>
+          <span className="flex items-center gap-1 text-[11px] font-extrabold text-[#35D47A]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#35D47A] pulse-active" />
+            AUTONOMOUS
+          </span>
+        </div>
+
+        {/* Weather Conditions */}
+        <div className="hidden sm:flex items-center gap-2.5 px-3 py-1 rounded-lg bg-[#0B1D29] border border-[#102B3B] text-xs">
+          <div className="flex items-center gap-1 text-[#48D5FF]">
+            <Thermometer className="w-3.5 h-3.5" />
+            <span className="font-mono font-bold">{weather.temperature}°C</span>
           </div>
-          <span className="text-slate-600">|</span>
-          <div className="flex items-center gap-1 text-slate-300">
-            <Wind className="w-3.5 h-3.5 text-blue-400" />
-            <span className="font-mono">{weather.wind_speed} km/h</span>
-          </div>
-          <span className="text-slate-600">|</span>
-          <div className="flex items-center gap-1 text-slate-300">
-            <Droplets className="w-3.5 h-3.5 text-teal-400" />
-            <span className="font-mono">{weather.humidity}%</span>
+          <span className="text-slate-700">|</span>
+          <div className="flex items-center gap-1 text-[#299BD7]">
+            <Wind className="w-3.5 h-3.5" />
+            <span className="font-mono font-bold">WIND {weather.wind_speed} km/h</span>
           </div>
         </div>
 
-        {/* Notifications Dropdown */}
-        <div className="relative" ref={notifRef}>
-          <button
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="relative p-2 rounded-lg text-slate-300 hover:text-white hover:bg-[#152445] transition-colors border border-transparent hover:border-[#1E325A]"
-            aria-label="Notifications"
-          >
-            <Bell className="w-5 h-5" />
-            {alertCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-extrabold flex items-center justify-center border-2 border-[#0B132B] animate-pulse">
-                {alertCount}
-              </span>
-            )}
-          </button>
-
-          {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-xl bg-[#0D1836] border border-[#1E325A] shadow-2xl shadow-black/80 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-              <div className="p-3.5 border-b border-[#1E325A] flex items-center justify-between bg-[#0F1A38]">
-                <div className="flex items-center gap-2">
-                  <Bell className="w-4 h-4 text-cyan-400" />
-                  <span className="font-semibold text-sm text-white">System Notifications</span>
-                </div>
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 font-medium">
-                  {alertCount} Active
-                </span>
-              </div>
-
-              <div className="max-h-72 overflow-y-auto divide-y divide-[#172547] p-2 space-y-1">
-                {recentAlerts.map((alert) => {
-                  const Icon = alert.icon;
-                  return (
-                    <div
-                      key={alert.id}
-                      className={`p-2.5 rounded-lg border ${alert.bg} transition-colors hover:brightness-110 cursor-pointer`}
-                      onClick={() => {
-                        setShowNotifications(false);
-                        navigate('/alerts');
-                      }}
-                    >
-                      <div className="flex items-start gap-2.5">
-                        <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${alert.color}`} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <p className={`text-xs font-semibold ${alert.color}`}>{alert.title}</p>
-                            <span className="text-[10px] text-slate-400">{alert.time}</span>
-                          </div>
-                          <p className="text-[11px] text-slate-300 mt-0.5 line-clamp-2">{alert.desc}</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="p-2.5 border-t border-[#1E325A] bg-[#0A132C]">
-                <button
-                  onClick={() => {
-                    setShowNotifications(false);
-                    navigate('/alerts');
-                  }}
-                  className="w-full py-1.5 px-3 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <span>View All Alerts & Anomalies</span>
-                  <ExternalLink className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          )}
+        {/* Dynamic Clock */}
+        <div className="hidden lg:flex flex-col text-right px-2.5 py-1 rounded-lg bg-[#0B1D29] border border-[#102B3B]">
+          <span className="text-xs font-mono font-bold text-[#EFFFFF]">{currentTime || '18:42'}</span>
+          <span className="text-[9px] text-[#89A7B7] font-semibold uppercase tracking-wider">LOCAL TIME</span>
         </div>
 
         {/* User Profile Menu */}
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="flex items-center gap-2.5 p-1.5 pr-2.5 rounded-xl hover:bg-[#152445] transition-colors border border-[#1E325A]/60"
+            className="flex items-center gap-2 p-1.5 pr-2 rounded-xl bg-[#0B1D29] hover:bg-[#0E2432] transition-colors border border-[#102B3B]"
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center text-white font-bold text-xs shadow-md shadow-cyan-600/20">
-              <User className="w-4 h-4" />
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#299BD7] to-[#48D5FF] flex items-center justify-center text-black font-bold text-xs shadow-md shadow-[#48D5FF]/20">
+              <User className="w-4 h-4 text-black" />
             </div>
-            <div className="hidden lg:block text-left">
-              <p className="text-xs font-semibold text-slate-200 leading-tight">System Admin</p>
-              <p className="text-[10px] text-cyan-400 font-mono leading-tight">Bharati Station</p>
+            <div className="hidden sm:block text-left">
+              <p className="text-xs font-bold text-[#EFFFFF] leading-tight">{roleDisplay}</p>
+              <p className="text-[10px] text-[#48D5FF] font-mono leading-tight">{usernameDisplay}</p>
             </div>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            <ChevronDown className="w-3.5 h-3.5 text-[#89A7B7]" />
           </button>
 
           {showProfileMenu && (
-            <div className="absolute right-0 mt-2 w-56 rounded-xl bg-[#0D1836] border border-[#1E325A] shadow-2xl shadow-black/80 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-              <div className="p-3.5 border-b border-[#1E325A] bg-[#0F1A38]">
-                <div className="flex items-center gap-2 text-xs font-semibold text-white">
-                  <Shield className="w-3.5 h-3.5 text-cyan-400" />
-                  System Administrator
+            <div className="absolute right-0 mt-2 w-56 rounded-xl bg-[#0B1D29] border border-[#102B3B] shadow-2xl shadow-black/90 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="p-3.5 border-b border-[#102B3B] bg-[#0E2432]">
+                <div className="flex items-center gap-2 text-xs font-bold text-white">
+                  <Shield className="w-3.5 h-3.5 text-[#48D5FF]" />
+                  <span>{roleDisplay}</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-0.5">Bharati Polar Station</p>
-                <span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">
-                  Role: Master Operator
+                <p className="text-[11px] font-mono text-[#89A7B7] mt-0.5">{usernameDisplay}</p>
+                <span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded bg-[#35D47A]/20 text-[#35D47A] font-mono font-bold">
+                  Status: ACTIVE
                 </span>
               </div>
 
               <div className="p-1.5 space-y-0.5 text-xs">
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      navigate('/admin/operators');
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[#EFFFFF] hover:bg-[#0E2432] text-left transition-colors"
+                  >
+                    <User className="w-3.5 h-3.5 text-[#48D5FF]" />
+                    <span>Operator Management</span>
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     setShowProfileMenu(false);
                     navigate('/settings');
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-[#172547] transition-colors"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[#89A7B7] hover:text-[#EFFFFF] hover:bg-[#0E2432] text-left transition-colors"
                 >
-                  <SettingsIcon className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Station Settings</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setShowProfileMenu(false);
-                    navigate('/data');
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-[#172547] transition-colors"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" />
-                  <span>Data & Telemetry</span>
+                  <SettingsIcon className="w-3.5 h-3.5 text-[#48D5FF]" />
+                  <span>System Settings</span>
                 </button>
               </div>
 
-              <div className="p-1.5 border-t border-[#1E325A] bg-[#0A132C]">
+              <div className="p-1.5 border-t border-[#102B3B] bg-[#06131D]">
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-red-400 hover:bg-red-500/10 text-xs font-semibold transition-colors"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[#FF6257] hover:bg-[#FF6257]/10 text-xs font-bold transition-colors"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   <span>Logout Session</span>

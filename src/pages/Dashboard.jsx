@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTelemetry } from '../context/TelemetryContext';
 import {
   Sun,
   Wind,
@@ -18,7 +19,9 @@ import {
   Droplets,
   Lightbulb,
   Radio,
-  Sliders
+  Sliders,
+  AlertTriangle,
+  Layers
 } from 'lucide-react';
 import {
   AreaChart,
@@ -35,545 +38,332 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
-import api from '../services/api';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { simState, activeAlerts } = useTelemetry();
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchDashboard = async () => {
-    try {
-      setRefreshing(true);
-      const res = await api.getDashboard();
-      setData(res);
-    } catch (err) {
-      console.warn('Using default demo dashboard state:', err);
-      // Realistic fallback seed state matching exact specifications
-      setData({
-        generation: {
-          solar_kw: 28,
-          wind_kw: 15,
-          diesel_kw: 0,
-          total_renewable_kw: 43,
-          available_total_kw: 43,
-        },
-        consumption: {
-          current_load_kw: 39,
-          net_balance_kw: 4, // 43 available - 39 load = +4 kW to battery
-        },
-        battery: {
-          level_percent: 74,
-          power_kw: 4.0,
-          status: 'Charging (Surplus 4 kW)',
-          min_reserve_percent: 30,
-        },
-        resilience: {
-          score: 84,
-          max_score: 100,
-          status: 'Optimal & Stable',
-        },
-        fuel: {
-          reserve_percent: 61,
-          status: 'Standby / Ample',
-        },
-        environment: {
-          temperature_c: -24.3,
-          wind_speed_kmh: 18,
-          humidity_percent: 65,
-        },
-        prediction_summary: {
-          now_kw: 39,
-          plus_1h_kw: 42,
-          plus_3h_kw: 48,
-          plus_6h_kw: 55,
-          plus_12h_kw: 53,
-          plus_24h_kw: 51,
-          confidence_percent: 92,
-        },
-        equipment_loads: [
-          { name: 'Critical Systems', kw: 18, priority: 'P1', color: '#00E5FF' },
-          { name: 'Heating (Essential)', kw: 12, priority: 'P1', color: '#FF3D71' },
-          { name: 'Research Equipment', kw: 10, priority: 'P2', color: '#48CAE4' },
-          { name: 'Water System', kw: 6, priority: 'P2', color: '#00C9A7' },
-          { name: 'Lighting', kw: 4, priority: 'P3', color: '#FFB300' },
-          { name: 'Non-critical Loads', kw: 8, priority: 'P4', color: '#8892B0' },
-        ],
-        recommendations: [
-          {
-            title: 'Reduce Non-critical Loads',
-            reason: 'Predicted demand surge (+6h: 55 kW) will exceed renewable capacity.',
-            saving: 'Save 8 kW',
-            priority: 'High',
-          },
-          {
-            title: 'Shift Water Heating to 14:00 - 16:00',
-            reason: 'Peak solar generation window occurs between 13:00 and 16:00.',
-            saving: 'Save 3 kW',
-            priority: 'Medium',
-          },
-          {
-            title: 'Maintain Battery Reserve above 30%',
-            reason: 'Safety buffer required for polar subzero nocturnal operations.',
-            saving: 'Safety Buffer',
-            priority: 'Critical',
-          },
-        ],
-        active_alerts: [
-          {
-            severity: 'critical',
-            title: 'High Consumption Detected - Heater 03',
-            desc: 'Heater 03 is consuming 12.5 kW (140% above normal).',
-          },
-          {
-            severity: 'warning',
-            title: 'Energy Shortage Predicted',
-            desc: 'Low renewable generation expected in next 6 hours.',
-          },
-        ],
-        timeline_24h: [
-          { time: '00:00', solar: 0, wind: 18, load: 38, battery: 76, diesel: 0 },
-          { time: '03:00', solar: 0, wind: 16, load: 36, battery: 73, diesel: 0 },
-          { time: '06:00', solar: 8, wind: 14, load: 37, battery: 72, diesel: 0 },
-          { time: '09:00', solar: 22, wind: 15, load: 40, battery: 73, diesel: 0 },
-          { time: '12:00', solar: 28, wind: 15, load: 39, battery: 74, diesel: 0 },
-          { time: '15:00', solar: 25, wind: 14, load: 42, battery: 74, diesel: 0 },
-          { time: '18:00', solar: 10, wind: 16, load: 48, battery: 70, diesel: 0 },
-          { time: '21:00', solar: 0, wind: 17, load: 45, battery: 67, diesel: 0 },
-          { time: '24:00', solar: 0, wind: 15, load: 41, battery: 65, diesel: 0 },
-        ],
-      });
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+  // Derive real-time values from TelemetryContext
+  const solarKw = simState.solarOutput;
+  const windKw = simState.windOutput;
+  const dieselKw = simState.dieselOutput;
+  const totalRenewableKw = solarKw + windKw;
+  const loadKw = simState.gridLoad;
+  const netBalanceKw = totalRenewableKw - loadKw;
+  const batterySoc = simState.batterySOC;
+  const batteryPowerKw = simState.batteryPower;
+  const dieselFuelPct = simState.dieselFuelPercent || 84;
+  const dieselFuelLiters = simState.dieselFuelLiters || 37800;
+  const resilienceScore = simState.resilienceScore || 88;
 
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
-
-  if (loading && !data) {
-    return (
-      <div className="p-8 text-center text-slate-400">
-        <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2 text-cyan-400" />
-        <p>Connecting to Bharati Polar Station telemetry...</p>
-      </div>
-    );
-  }
-
-  const d = data;
   const energyMix = [
-    { name: 'Solar', value: d.generation.solar_kw, color: '#00E5FF' },
-    { name: 'Wind', value: d.generation.wind_kw, color: '#48CAE4' },
-    { name: 'Diesel', value: d.generation.diesel_kw, color: '#FF3D71' },
+    { name: 'Solar', value: Math.max(1, solarKw), color: simState.solarRisk ? '#FF6257' : '#FFD12A' },
+    { name: 'Wind', value: Math.max(1, windKw), color: simState.windRisk ? '#FF6257' : '#299BD7' },
+    { name: 'Diesel', value: dieselKw > 0 ? dieselKw : 0, color: '#FFA000' },
+  ];
+
+  const timelineData = [
+    { time: '00:00', solar: 0, wind: Math.round(windKw * 0.9), load: Math.round(loadKw * 0.8), battery: 76, diesel: dieselKw },
+    { time: '03:00', solar: 0, wind: Math.round(windKw * 0.95), load: Math.round(loadKw * 0.82), battery: 73, diesel: dieselKw },
+    { time: '06:00', solar: Math.round(solarKw * 0.3), wind: Math.round(windKw * 0.92), load: Math.round(loadKw * 0.9), battery: 72, diesel: 0 },
+    { time: '09:00', solar: Math.round(solarKw * 0.75), wind: Math.round(windKw * 0.98), load: Math.round(loadKw * 0.98), battery: 73, diesel: 0 },
+    { time: '12:00', solar: solarKw, wind: windKw, load: loadKw, battery: batterySoc, diesel: dieselKw },
+    { time: '15:00', solar: Math.round(solarKw * 0.85), wind: Math.round(windKw * 1.05), load: Math.round(loadKw * 1.02), battery: 74, diesel: 0 },
+    { time: '18:00', solar: Math.round(solarKw * 0.3), wind: Math.round(windKw * 1.1), load: Math.round(loadKw * 1.04), battery: 70, diesel: 0 },
+    { time: '21:00', solar: 0, wind: Math.round(windKw * 1.02), load: Math.round(loadKw * 0.95), battery: 67, diesel: 0 },
+    { time: '24:00', solar: 0, wind: Math.round(windKw * 0.95), load: Math.round(loadKw * 0.84), battery: 65, diesel: dieselKw },
   ];
 
   return (
     <div className="space-y-6">
       {/* Top Banner / Station Overview */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#1C2F57]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#102B3B]">
         <div>
-          <h2 className="text-xl sm:text-2xl font-black tracking-wide text-white flex items-center gap-2.5">
+          <h2 className="text-xl sm:text-2xl font-black tracking-wide text-[#EFFFFF] flex items-center gap-2.5">
             BHARATI STATION OVERVIEW
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">
-              LIVE TELEMETRY
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#35D47A]/20 text-[#35D47A] border border-[#35D47A]/30 font-medium flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#35D47A] pulse-active" />
+              Live Telemetry Synchronized
             </span>
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Real-time multi-source generation, storage reserves, and AI demand forecasting.
+          <p className="text-xs text-[#89A7B7] mt-1">
+            Real-time digital twin overview synchronized with active 3D Simulation engine.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button
-            onClick={fetchDashboard}
-            disabled={refreshing}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#111C3A] hover:bg-[#16244A] border border-[#1E325A] text-xs font-semibold text-cyan-300 transition-colors"
+            onClick={() => navigate('/simulation')}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#48D5FF]/15 text-[#48D5FF] border border-[#48D5FF]/30 text-xs font-bold hover:bg-[#48D5FF]/25 transition-colors cursor-pointer"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>Sync Station</span>
-          </button>
-          <button
-            onClick={() => navigate('/optimization')}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black text-xs font-bold transition-all shadow-md shadow-cyan-500/20"
-          >
-            <Sliders className="w-3.5 h-3.5" />
-            <span>Smart Dispatch</span>
+            <Layers className="w-4 h-4" />
+            <span>Open 3D Simulation</span>
           </button>
         </div>
       </div>
 
-      {/* KPI METRIC CARDS ROW 1 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Solar Generation */}
-        <div className="polar-card p-5 border border-cyan-500/30 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Solar Generation
-            </span>
-            <div className="p-2 rounded-lg bg-cyan-500/15 text-cyan-400">
-              <Sun className="w-5 h-5" />
+      {/* 5 Core Top Summary Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4">
+        {/* 1. Solar Generation */}
+        <div className={`p-4 rounded-xl bg-[#0B1D29] border ${simState.solarRisk ? 'border-[#FF6257] animate-pulse' : 'border-[#102B3B]'} shadow-lg`}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold text-[#89A7B7] uppercase">Solar Harvest</span>
+            <div className={`p-1.5 rounded-lg ${simState.solarRisk ? 'bg-[#FF6257]/20 text-[#FF6257]' : 'bg-[#FFD12A]/10 text-[#FFD12A]'}`}>
+              <Sun className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-white font-mono">
-              {d.generation.solar_kw}
-            </span>
-            <span className="text-sm font-semibold text-cyan-400">kW</span>
+          <div className="text-2xl font-mono font-black text-[#EFFFFF]">
+            {solarKw} <span className="text-xs text-[#89A7B7] font-sans font-normal">kW</span>
           </div>
-          <div className="mt-3 flex items-center justify-between text-xs text-slate-400 border-t border-[#1C2F57] pt-2">
-            <span>Irradiance Index</span>
-            <span className="text-cyan-300 font-medium">680 W/m²</span>
+          <div className="mt-2 text-[10px] font-semibold flex items-center justify-between">
+            <span className="text-[#89A7B7]">State:</span>
+            <span className={simState.solarRisk ? 'text-[#FF6257] font-bold' : 'text-[#35D47A]'}>
+              {simState.solarRisk ? 'DEFICIT RISK' : `${simState.solarEfficiency}% Eff`}
+            </span>
           </div>
         </div>
 
-        {/* Wind Generation */}
-        <div className="polar-card p-5 border border-blue-500/30 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Wind Generation
-            </span>
-            <div className="p-2 rounded-lg bg-blue-500/15 text-blue-400">
-              <Wind className="w-5 h-5" />
+        {/* 2. Wind Generation */}
+        <div className="p-4 rounded-xl bg-[#0B1D29] border border-[#102B3B] shadow-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold text-[#89A7B7] uppercase">Wind Generation</span>
+            <div className="p-1.5 rounded-lg bg-[#299BD7]/10 text-[#299BD7]">
+              <Wind className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-white font-mono">
-              {d.generation.wind_kw}
-            </span>
-            <span className="text-sm font-semibold text-blue-400">kW</span>
+          <div className="text-2xl font-mono font-black text-[#EFFFFF]">
+            {windKw} <span className="text-xs text-[#89A7B7] font-sans font-normal">kW</span>
           </div>
-          <div className="mt-3 flex items-center justify-between text-xs text-slate-400 border-t border-[#1C2F57] pt-2">
-            <span>Wind Speed</span>
-            <span className="text-blue-300 font-medium">{d.environment.wind_speed_kmh} km/h</span>
+          <div className="mt-2 text-[10px] font-semibold flex items-center justify-between">
+            <span className="text-[#89A7B7]">Speed:</span>
+            <span className="text-[#299BD7] font-bold font-mono">{simState.windSpeed} km/h</span>
           </div>
         </div>
 
-        {/* Diesel Generator */}
-        <div className="polar-card p-5 border border-slate-700 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Diesel Generator
-            </span>
-            <div className="p-2 rounded-lg bg-slate-800 text-slate-400">
-              <Fuel className="w-5 h-5" />
+        {/* 3. Battery Storage */}
+        <div className={`p-4 rounded-xl bg-[#0B1D29] border ${simState.batteryRisk ? 'border-[#FF6257] animate-pulse' : 'border-[#102B3B]'} shadow-lg`}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold text-[#89A7B7] uppercase">Battery Reserve</span>
+            <div className={`p-1.5 rounded-lg ${simState.batteryRisk ? 'bg-[#FF6257]/20 text-[#FF6257]' : 'bg-[#35D47A]/10 text-[#35D47A]'}`}>
+              <BatteryCharging className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-slate-300 font-mono">
-              {d.generation.diesel_kw}
-            </span>
-            <span className="text-sm font-semibold text-slate-400">kW</span>
+          <div className="text-2xl font-mono font-black text-[#EFFFFF]">
+            {batterySoc}%
           </div>
-          <div className="mt-3 flex items-center justify-between text-xs text-slate-400 border-t border-[#1C2F57] pt-2">
-            <span>Generator Status</span>
-            <span className="text-emerald-400 font-semibold uppercase">0 kW (Standby)</span>
+          <div className="mt-2 text-[10px] font-semibold flex items-center justify-between">
+            <span className="text-[#89A7B7]">Flow:</span>
+            <span className={batteryPowerKw >= 0 ? 'text-[#35D47A] font-bold' : 'text-[#FFD12A] font-bold'}>
+              {batteryPowerKw >= 0 ? `+${batteryPowerKw} kW` : `${batteryPowerKw} kW`}
+            </span>
           </div>
         </div>
 
-        {/* Battery Bank */}
-        <div className="polar-card p-5 border border-emerald-500/30 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Battery Bank SOC
-            </span>
-            <div className="p-2 rounded-lg bg-emerald-500/15 text-emerald-400">
-              <BatteryCharging className="w-5 h-5" />
+        {/* 4. Total Station Load */}
+        <div className="p-4 rounded-xl bg-[#0B1D29] border border-[#102B3B] shadow-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold text-[#89A7B7] uppercase">Station Demand</span>
+            <div className="p-1.5 rounded-lg bg-[#48D5FF]/10 text-[#48D5FF]">
+              <Zap className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-white font-mono">
-              {d.battery.level_percent}%
-            </span>
-            <span className="text-xs font-semibold text-emerald-400">
-              +{d.battery.power_kw} kW (Charging)
+          <div className="text-2xl font-mono font-black text-[#EFFFFF]">
+            {loadKw} <span className="text-xs text-[#89A7B7] font-sans font-normal">kW</span>
+          </div>
+          <div className="mt-2 text-[10px] font-semibold flex items-center justify-between">
+            <span className="text-[#89A7B7]">Net Balance:</span>
+            <span className={netBalanceKw >= 0 ? 'text-[#35D47A] font-bold' : 'text-[#FF6257] font-bold'}>
+              {netBalanceKw >= 0 ? `+${netBalanceKw} kW` : `${netBalanceKw} kW`}
             </span>
           </div>
-          <div className="mt-3 flex items-center justify-between text-xs text-slate-400 border-t border-[#1C2F57] pt-2">
-            <span>Min Preferred Reserve</span>
-            <span className="text-emerald-300 font-medium">&gt; {d.battery.min_reserve_percent}%</span>
+        </div>
+
+        {/* 5. Diesel Level & Output */}
+        <div className={`p-4 rounded-xl bg-[#0B1D29] border ${dieselKw > 0 ? 'border-[#FFA000]/60' : 'border-[#102B3B]'} shadow-lg`}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold text-[#89A7B7] uppercase">Diesel Reserve</span>
+            <div className={`p-1.5 rounded-lg ${dieselKw > 0 ? 'bg-[#FFA000]/20 text-[#FFA000]' : 'bg-[#E5A93C]/10 text-[#E5A93C]'}`}>
+              <Fuel className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-mono font-black text-[#EFFFFF]">
+            {dieselFuelPct}%
+          </div>
+          <div className="mt-2 text-[10px] font-semibold flex items-center justify-between">
+            <span className="text-[#89A7B7]">Genset:</span>
+            <span className={dieselKw > 0 ? 'text-[#FFA000] font-bold' : 'text-[#35D47A]'}>
+              {dieselKw > 0 ? `${dieselKw} kW ACTIVE` : '0 kW (STANDBY)'}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* KPI METRIC CARDS ROW 2 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Current Consumption */}
-        <div className="polar-card p-4 flex items-center justify-between border-l-4 border-l-amber-400">
-          <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase">Station Load</p>
-            <p className="text-2xl font-black text-white font-mono mt-0.5">
-              {d.consumption.current_load_kw} <span className="text-xs font-normal text-amber-400">kW</span>
-            </p>
-            <p className="text-[10px] text-slate-400 mt-1">6 Active Subsystems</p>
-          </div>
-          <div className="p-3 rounded-xl bg-amber-500/10 text-amber-400">
-            <Activity className="w-6 h-6" />
-          </div>
-        </div>
-
-        {/* Available Energy */}
-        <div className="polar-card p-4 flex items-center justify-between border-l-4 border-l-cyan-400">
-          <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase">Available Energy</p>
-            <p className="text-2xl font-black text-white font-mono mt-0.5">
-              {d.generation.available_total_kw} <span className="text-xs font-normal text-cyan-400">kW</span>
-            </p>
-            <p className="text-[10px] text-emerald-400 mt-1">+4 kW Net Surplus</p>
-          </div>
-          <div className="p-3 rounded-xl bg-cyan-500/10 text-cyan-400">
-            <Zap className="w-6 h-6" />
-          </div>
-        </div>
-
-        {/* Energy Resilience */}
-        <div className="polar-card p-4 flex items-center justify-between border-l-4 border-l-emerald-400">
-          <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase">Energy Resilience</p>
-            <p className="text-2xl font-black text-white font-mono mt-0.5">
-              {d.resilience.score} <span className="text-xs font-normal text-slate-400">/ 100</span>
-            </p>
-            <p className="text-[10px] text-emerald-400 mt-1">Optimal Polar Defense</p>
-          </div>
-          <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400">
-            <ShieldCheck className="w-6 h-6" />
-          </div>
-        </div>
-
-        {/* Fuel Reserve */}
-        <div className="polar-card p-4 flex items-center justify-between border-l-4 border-l-blue-400">
-          <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase">Diesel Fuel Reserve</p>
-            <p className="text-2xl font-black text-white font-mono mt-0.5">
-              {d.fuel.reserve_percent}%
-            </p>
-            <p className="text-[10px] text-slate-400 mt-1">Tank Capacity: 45,000 L</p>
-          </div>
-          <div className="p-3 rounded-xl bg-blue-500/10 text-blue-400">
-            <Flame className="w-6 h-6" />
-          </div>
-        </div>
-      </div>
-
-      {/* MAIN 24H GENERATION VS DEMAND CHART */}
-      <div className="polar-card p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-          <div>
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-cyan-400" />
-              24-Hour Energy Generation vs. Demand Curve
-            </h3>
-            <p className="text-xs text-slate-400">
-              Diurnal solar output, Antarctic wind patterns, and baseline station load profiles.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 text-xs">
-            <span className="flex items-center gap-1.5 text-cyan-300">
-              <span className="w-2.5 h-2.5 rounded bg-[#00E5FF]"></span> Solar
-            </span>
-            <span className="flex items-center gap-1.5 text-blue-300">
-              <span className="w-2.5 h-2.5 rounded bg-[#48CAE4]"></span> Wind
-            </span>
-            <span className="flex items-center gap-1.5 text-amber-300">
-              <span className="w-2.5 h-2.5 rounded bg-[#FFB300]"></span> Demand
-            </span>
-          </div>
-        </div>
-
-        <div className="h-72 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={d.timeline_24h}>
-              <defs>
-                <linearGradient id="solarGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#00E5FF" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#00E5FF" stopOpacity={0.0} />
-                </linearGradient>
-                <linearGradient id="windGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#48CAE4" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#48CAE4" stopOpacity={0.0} />
-                </linearGradient>
-                <linearGradient id="loadGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#FFB300" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#FFB300" stopOpacity={0.0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1C2F57" vertical={false} />
-              <XAxis dataKey="time" stroke="#64748B" tick={{ fill: '#94A3B8', fontSize: 11 }} />
-              <YAxis stroke="#64748B" tick={{ fill: '#94A3B8', fontSize: 11 }} unit=" kW" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#0D1836',
-                  borderColor: '#1E325A',
-                  borderRadius: '0.5rem',
-                  fontSize: '12px',
-                  color: '#fff',
-                }}
-              />
-              <Area
-                type="monotone"
-                dataKey="solar"
-                name="Solar (kW)"
-                stroke="#00E5FF"
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#solarGrad)"
-              />
-              <Area
-                type="monotone"
-                dataKey="wind"
-                name="Wind (kW)"
-                stroke="#48CAE4"
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#windGrad)"
-              />
-              <Area
-                type="monotone"
-                dataKey="load"
-                name="Station Demand (kW)"
-                stroke="#FFB300"
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#loadGrad)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* 3-COLUMN SECTION: PREDICTION SNAPSHOT + LOAD BREAKDOWN + AI RECS */}
+      {/* Main Charts & Telemetry Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 1. PREDICTION SNAPSHOT */}
-        <div className="polar-card p-5 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-cyan-400" />
-                AI Demand Forecast
+        {/* Left 2 Cols: 24h Generation vs Load Timeline */}
+        <div className="lg:col-span-2 p-5 rounded-2xl bg-[#0B1D29] border border-[#102B3B] shadow-xl space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-extrabold text-[#EFFFFF] uppercase tracking-wider">
+                24-HOUR GENERATION & LOAD DISPATCH
               </h3>
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono">
-                {d.prediction_summary.confidence_percent}% Conf.
-              </span>
+              <p className="text-xs text-[#89A7B7] mt-0.5">
+                Live microgrid power generation curves synced with current simulation state
+              </p>
             </div>
-
-            <div className="space-y-2 mt-4">
-              <div className="p-2.5 rounded-lg bg-[#0E1A38] border border-[#1C2F57] flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-medium">Current Demand (Now)</span>
-                <span className="font-mono font-bold text-white">{d.prediction_summary.now_kw} kW</span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-[#0E1A38] border border-[#1C2F57] flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-medium">Horizon +1 Hour</span>
-                <span className="font-mono font-bold text-cyan-300">{d.prediction_summary.plus_1h_kw} kW</span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-[#0E1A38] border border-[#1C2F57] flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-medium">Horizon +3 Hours</span>
-                <span className="font-mono font-bold text-blue-300">{d.prediction_summary.plus_3h_kw} kW</span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-[#14234B] border border-amber-500/40 flex items-center justify-between text-xs">
-                <span className="text-amber-300 font-semibold">Horizon +6 Hours (Peak)</span>
-                <span className="font-mono font-bold text-amber-400">{d.prediction_summary.plus_6h_kw} kW</span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-[#0E1A38] border border-[#1C2F57] flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-medium">Horizon +12 Hours</span>
-                <span className="font-mono font-bold text-slate-200">{d.prediction_summary.plus_12h_kw} kW</span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-[#0E1A38] border border-[#1C2F57] flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-medium">Horizon +24 Hours</span>
-                <span className="font-mono font-bold text-slate-200">{d.prediction_summary.plus_24h_kw} kW</span>
-              </div>
+            <div className="flex items-center gap-3 text-xs font-mono">
+              <span className="flex items-center gap-1.5 text-[#FFD12A]">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#FFD12A]" /> Solar
+              </span>
+              <span className="flex items-center gap-1.5 text-[#299BD7]">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#299BD7]" /> Wind
+              </span>
+              <span className="flex items-center gap-1.5 text-[#48D5FF]">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#48D5FF]" /> Demand
+              </span>
             </div>
           </div>
 
-          <button
-            onClick={() => navigate('/prediction')}
-            className="w-full mt-4 py-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-          >
-            <span>Explore Full Multi-Model Forecast</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </button>
+          <div className="h-[280px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={timelineData}>
+                <defs>
+                  <linearGradient id="solGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#FFD12A" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#FFD12A" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="windGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#299BD7" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#299BD7" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="loadGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#48D5FF" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#48D5FF" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#102B3B" />
+                <XAxis dataKey="time" stroke="#89A7B7" fontSize={11} />
+                <YAxis stroke="#89A7B7" fontSize={11} unit=" kW" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#06131D', borderColor: '#102B3B', borderRadius: '8px', color: '#EFFFFF' }}
+                />
+                <Area type="monotone" dataKey="solar" stroke="#FFD12A" fill="url(#solGrad)" strokeWidth={2} name="Solar (kW)" />
+                <Area type="monotone" dataKey="wind" stroke="#299BD7" fill="url(#windGrad)" strokeWidth={2} name="Wind (kW)" />
+                <Area type="monotone" dataKey="load" stroke="#48D5FF" fill="url(#loadGrad)" strokeWidth={2} name="Demand (kW)" strokeDasharray="4 4" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        {/* 2. EQUIPMENT LOAD DISTRIBUTION */}
-        <div className="polar-card p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Cpu className="w-4 h-4 text-cyan-400" />
-              Subsystem Load Demand
+        {/* Right Col: Live Energy Mix Donut + Diesel Tank Gauge */}
+        <div className="p-5 rounded-2xl bg-[#0B1D29] border border-[#102B3B] shadow-xl space-y-4 flex flex-col justify-between">
+          <div>
+            <h3 className="text-sm font-extrabold text-[#EFFFFF] uppercase tracking-wider">
+              REAL-TIME GENERATION MIX
             </h3>
-            <span className="text-[11px] text-slate-400 font-mono">Total: 39 kW</span>
+            <p className="text-xs text-[#89A7B7] mt-0.5">
+              Current source contribution breakdown
+            </p>
           </div>
 
-          <div className="space-y-3 mt-4">
-            {d.equipment_loads.map((item) => (
-              <div key={item.name} className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-300 font-medium">{item.name}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#1C2F57] text-cyan-300 font-mono">
-                      {item.priority}
-                    </span>
-                    <span className="font-mono font-bold text-white">{item.kw} kW</span>
-                  </div>
-                </div>
-                <div className="w-full h-1.5 bg-[#0C152B] rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${(item.kw / 20) * 100}%`,
-                      backgroundColor: item.color,
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
+          <div className="h-[180px] w-full relative flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={energyMix}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={75}
+                  paddingAngle={4}
+                  dataKey="value"
+                >
+                  {energyMix.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#06131D', borderColor: '#102B3B', borderRadius: '8px', color: '#EFFFFF' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-lg font-mono font-black text-[#EFFFFF]">{totalRenewableKw + dieselKw} kW</span>
+              <span className="text-[9px] text-[#89A7B7] uppercase font-bold">Total Power</span>
+            </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[#1C2F57] flex items-center justify-between text-[11px] text-slate-400">
-            <span>Critical P1 Total: 30 kW</span>
-            <span>Non-Essential: 9 kW</span>
+          {/* Diesel Tank Gauge */}
+          <div className="p-3 rounded-xl bg-[#06131D] border border-[#102B3B] space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1.5 text-[#89A7B7] font-semibold">
+                <Fuel className="w-3.5 h-3.5 text-[#FF6257]" />
+                Diesel Reserve Tank
+              </span>
+              <span className="font-mono font-bold text-[#EFFFFF]">{dieselFuelPct}% ({dieselFuelLiters.toLocaleString()} L)</span>
+            </div>
+            <div className="w-full h-2.5 bg-[#102B3B] rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  dieselFuelPct < 30 ? 'bg-[#FF6257]' : dieselFuelPct < 60 ? 'bg-[#FFD12A]' : 'bg-[#35D47A]'
+                }`}
+                style={{ width: `${dieselFuelPct}%` }}
+              />
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* 3. AI RECOMMENDATIONS */}
-        <div className="polar-card p-5 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-                AI Optimization Actions
-              </h3>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold">
-                3 Actionable
-              </span>
-            </div>
-
-            <div className="space-y-2.5 mt-3">
-              {d.recommendations.map((rec, idx) => (
-                <div
-                  key={idx}
-                  className="p-3 rounded-lg bg-[#0E1A38] border border-[#1C2F57] hover:border-cyan-500/40 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-xs font-bold text-cyan-300">{rec.title}</p>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold font-mono whitespace-nowrap">
-                      {rec.saving}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{rec.reason}</p>
-                </div>
-              ))}
-            </div>
+      {/* Live System Alerts List Synchronized */}
+      <div className="p-5 rounded-2xl bg-[#0B1D29] border border-[#102B3B] shadow-xl space-y-3">
+        <div className="flex items-center justify-between pb-2 border-b border-[#102B3B]">
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4 text-[#48D5FF]" />
+            <h3 className="text-sm font-extrabold text-[#EFFFFF] uppercase tracking-wider">
+              LIVE SYSTEM ALERTS & TELEMETRY LOGS
+            </h3>
           </div>
-
           <button
-            onClick={() => navigate('/optimization')}
-            className="w-full mt-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md shadow-cyan-500/20"
+            onClick={() => navigate('/alerts')}
+            className="text-xs font-bold text-[#48D5FF] hover:underline cursor-pointer"
           >
-            <Sliders className="w-3.5 h-3.5" />
-            <span>Execute Optimization Engine</span>
+            View All in Alerts & Anomalies →
           </button>
+        </div>
+
+        <div className="space-y-2">
+          {activeAlerts.map((alert) => (
+            <div
+              key={alert.id}
+              className={`p-3 rounded-xl border flex items-center justify-between transition-colors ${
+                alert.severity === 'critical'
+                  ? 'bg-[#FF6257]/15 border-[#FF6257]/40 text-[#FF6257]'
+                  : alert.severity === 'warning'
+                  ? 'bg-[#FFD12A]/15 border-[#FFD12A]/40 text-[#FFD12A]'
+                  : 'bg-[#06131D] border-[#102B3B] text-[#EFFFFF]'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                {alert.severity === 'critical' ? (
+                  <AlertOctagon className="w-4 h-4 text-[#FF6257] flex-shrink-0" />
+                ) : alert.severity === 'warning' ? (
+                  <AlertTriangle className="w-4 h-4 text-[#FFD12A] flex-shrink-0" />
+                ) : (
+                  <ShieldCheck className="w-4 h-4 text-[#35D47A] flex-shrink-0" />
+                )}
+                <div>
+                  <span className="text-xs font-bold">{alert.title}</span>
+                  <p className="text-[11px] text-[#89A7B7] mt-0.5">{alert.desc}</p>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <span className="font-mono text-xs font-bold">{alert.value}</span>
+                <p className="text-[10px] text-[#89A7B7]">{alert.timestamp}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ from .database import engine, Base
 from .seed_data import seed_database
 from .routes import (
     auth,
+    operators,
     dashboard,
     predictions,
     optimization,
@@ -41,6 +42,7 @@ app.add_middleware(
 
 # Include Routers under /api
 app.include_router(auth.router, prefix="/api")
+app.include_router(operators.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
 app.include_router(predictions.router, prefix="/api")
 app.include_router(optimization.router, prefix="/api")
@@ -49,6 +51,7 @@ app.include_router(simulation.router, prefix="/api")
 app.include_router(data.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
 app.include_router(settings.router, prefix="/api")
+
 
 @app.get("/")
 def root():

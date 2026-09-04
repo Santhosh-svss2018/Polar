@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTelemetry } from '../context/TelemetryContext';
 import {
   FileBarChart2,
   Calendar,
@@ -12,7 +13,9 @@ import {
   ShieldCheck,
   CheckCircle2,
   RefreshCw,
-  Clock
+  Clock,
+  Layers,
+  Sparkles
 } from 'lucide-react';
 import {
   BarChart,
@@ -31,6 +34,7 @@ import {
 import api from '../services/api';
 
 export default function Reports() {
+  const { simState } = useTelemetry();
   const [period, setPeriod] = useState('weekly');
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -42,7 +46,7 @@ export default function Reports() {
       renewable_fraction_pct: 92.4,
       diesel_consumed_liters: 142,
       diesel_conserved_liters: 580,
-      avg_resilience_score: 86.2,
+      avg_resilience_score: 88.2,
       anomalies_detected: 4,
       anomalies_resolved: 4,
     },
@@ -53,9 +57,39 @@ export default function Reports() {
       { date: 'Thu', solar_kwh: 320, wind_kwh: 410, diesel_kwh: 45, load_kwh: 890, resilience: 82 },
       { date: 'Fri', solar_kwh: 520, wind_kwh: 350, diesel_kwh: 0, load_kwh: 805, resilience: 90 },
       { date: 'Sat', solar_kwh: 540, wind_kwh: 330, diesel_kwh: 0, load_kwh: 790, resilience: 91 },
-      { date: 'Sun', solar_kwh: 490, wind_kwh: 370, diesel_kwh: 0, load_kwh: 815, resilience: 88 },
+      { date: 'Sun (Live)', solar_kwh: Math.round(simState.solarOutput * 1.8), wind_kwh: Math.round(simState.windOutput * 1.8), diesel_kwh: Math.round(simState.dieselOutput * 1.8), load_kwh: Math.round(simState.gridLoad * 1.8), resilience: simState.resilienceScore || 90 },
     ],
   });
+
+  const [simLog] = useState([
+    {
+      id: 1,
+      time: '18:40',
+      title: 'Real-Time Telemetry Snapshot',
+      renewablePct: 100,
+      dieselUsed: '0 L',
+      loadKw: 621,
+      status: 'Optimal (All Safe)',
+    },
+    {
+      id: 2,
+      time: '18:25',
+      title: 'Wind & Solar Vector Dispatch',
+      renewablePct: 91,
+      dieselUsed: '12 L',
+      loadKw: 710,
+      status: 'Nominal Buffer',
+    },
+    {
+      id: 3,
+      time: '18:10',
+      title: 'Station Load Balance Cycle',
+      renewablePct: 96,
+      dieselUsed: '0 L',
+      loadKw: 580,
+      status: 'Optimal (All Safe)',
+    },
+  ]);
 
   const fetchReports = async (p = period) => {
     try {
@@ -77,226 +111,192 @@ export default function Reports() {
 
   const handleExportCSV = () => {
     setExporting(true);
-    // Create CSV content directly in browser for reliable instant download
-    const headers = ['Date', 'Solar (kWh)', 'Wind (kWh)', 'Diesel (kWh)', 'Total Load (kWh)', 'Resilience Score'];
-    const rows = reportData.daily_records.map(r => [
-      r.date,
-      r.solar_kwh,
-      r.wind_kwh,
-      r.diesel_kwh,
-      r.load_kwh,
-      r.resilience
-    ]);
-
-    let csvContent = 'data:text/csv;charset=utf-8,';
-    csvContent += 'POLAR-ENERGY AI — BHARATI POLAR STATION ENERGY REPORT\n';
-    csvContent += `Period: ${period.toUpperCase()}\n`;
-    csvContent += `Generated: ${new Date().toISOString()}\n\n`;
-    csvContent += headers.join(',') + '\n';
-    rows.forEach(row => {
-      csvContent += row.join(',') + '\n';
-    });
-
+    const headers = ['Date/Period', 'Solar Generation (kWh)', 'Wind Generation (kWh)', 'Diesel Backup (kWh)', 'Total Load (kWh)', 'Resilience Score'];
+    const rows = reportData.daily_records.map((r) => [r.date, r.solar_kwh, r.wind_kwh, r.diesel_kwh, r.load_kwh, r.resilience]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `polar_energy_report_${period}_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `PolarEnergyAI_Report_${period}_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
-    setTimeout(() => setExporting(false), 600);
+    setTimeout(() => setExporting(false), 500);
   };
 
   const s = reportData.summary;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#1C2F57]">
+      {/* Header & Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#102B3B]">
         <div>
-          <h2 className="text-xl sm:text-2xl font-black tracking-wide text-white flex items-center gap-2.5">
-            ENERGY ANALYTICS & REPORTS
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-medium">
-              HISTORICAL TELEMETRY
-            </span>
+          <h2 className="text-xl sm:text-2xl font-black tracking-wide text-[#EFFFFF] flex items-center gap-2">
+            ENERGY ANALYTICS & SIMULATION REPORTS
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Aggregated station energy performance, fuel conservation metrics, and printable audit reports.
+          <p className="text-xs text-[#89A7B7] mt-1">
+            Historical generation metrics, simulation outcomes, and fuel audit logs
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
           {/* Period selector */}
-          <div className="flex items-center p-1 rounded-lg bg-[#0E1A38] border border-[#1C2F57] text-xs">
-            <button
-              onClick={() => setPeriod('daily')}
-              className={`px-3 py-1.5 rounded-md font-semibold transition-colors ${
-                period === 'daily' ? 'bg-cyan-500 text-black' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Daily
-            </button>
-            <button
-              onClick={() => setPeriod('weekly')}
-              className={`px-3 py-1.5 rounded-md font-semibold transition-colors ${
-                period === 'weekly' ? 'bg-cyan-500 text-black' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Weekly
-            </button>
-            <button
-              onClick={() => setPeriod('monthly')}
-              className={`px-3 py-1.5 rounded-md font-semibold transition-colors ${
-                period === 'monthly' ? 'bg-cyan-500 text-black' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Monthly
-            </button>
+          <div className="flex bg-[#0B1D29] border border-[#102B3B] rounded-lg p-1">
+            {['daily', 'weekly', 'monthly'].map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`px-3 py-1.5 rounded text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
+                  period === p ? 'bg-[#48D5FF] text-black font-bold' : 'text-[#89A7B7] hover:text-[#EFFFFF]'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
           </div>
 
+          {/* Export CSV */}
           <button
             onClick={handleExportCSV}
             disabled={exporting}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-extrabold text-xs tracking-wider transition-all shadow-md shadow-cyan-500/20 cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#299BD7]/20 border border-[#299BD7]/40 text-[#48D5FF] text-xs font-bold hover:bg-[#299BD7]/30 transition-colors cursor-pointer"
           >
-            <Download className="w-4 h-4" />
-            <span>{exporting ? 'GENERATING CSV...' : 'EXPORT REPORT (CSV)'}</span>
+            <Download className="w-3.5 h-3.5" />
+            <span>{exporting ? 'Exporting...' : 'Export CSV'}</span>
           </button>
         </div>
       </div>
 
-      {/* SUMMARY KPI CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="polar-card p-4 border border-cyan-500/30">
+      {/* KPI METRIC CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-4 rounded-xl bg-[#0B1D29] border border-[#102B3B] shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase">Renewable Generation</span>
-            <Sun className="w-4 h-4 text-cyan-400" />
+            <span className="text-xs font-bold text-[#89A7B7] uppercase">Total Renewable Generated</span>
+            <Sun className="w-4 h-4 text-[#48D5FF]" />
           </div>
-          <p className="text-2xl font-black text-white font-mono mt-1">
-            {s.total_renewable_kwh.toLocaleString()} <span className="text-xs font-bold text-cyan-300">kWh</span>
+          <p className="text-2xl font-black text-[#EFFFFF] font-mono mt-1">
+            {(s.total_renewable_kwh + Math.round(simState.solarOutput * 2 + simState.windOutput * 2)).toLocaleString()}{' '}
+            <span className="text-xs font-normal text-[#89A7B7]">kWh</span>
           </p>
-          <p className="text-[10px] text-emerald-400 mt-1">{s.renewable_fraction_pct}% of total station power</p>
+          <p className="text-[10px] text-[#35D47A] mt-1 font-semibold">100% Zero-Carbon Harvested</p>
         </div>
 
-        <div className="polar-card p-4 border border-amber-500/30">
+        <div className="p-4 rounded-xl bg-[#0B1D29] border border-[#102B3B] shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase">Station Load Demand</span>
-            <TrendingUp className="w-4 h-4 text-amber-400" />
+            <span className="text-xs font-bold text-[#89A7B7] uppercase">Renewable Fraction</span>
+            <TrendingUp className="w-4 h-4 text-[#35D47A]" />
           </div>
-          <p className="text-2xl font-black text-white font-mono mt-1">
-            {s.total_consumption_kwh.toLocaleString()} <span className="text-xs font-bold text-amber-300">kWh</span>
+          <p className="text-2xl font-black text-[#35D47A] font-mono mt-1">
+            {simState.dieselOutput > 0 ? '78.4%' : '94.2%'}
           </p>
-          <p className="text-[10px] text-slate-400 mt-1">Life support & research operations</p>
+          <p className="text-[10px] text-[#89A7B7] mt-1">Target: &gt;90% Renewable</p>
         </div>
 
-        <div className="polar-card p-4 border border-blue-500/30">
+        <div className="p-4 rounded-xl bg-[#0B1D29] border border-[#102B3B] shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase">Diesel Conserved</span>
-            <Fuel className="w-4 h-4 text-blue-400" />
+            <span className="text-xs font-bold text-[#89A7B7] uppercase">Diesel Fuel Conserved</span>
+            <Fuel className="w-4 h-4 text-[#FFA000]" />
           </div>
-          <p className="text-2xl font-black text-white font-mono mt-1">
-            +{s.diesel_conserved_liters} <span className="text-xs font-bold text-blue-300">Liters</span>
+          <p className="text-2xl font-black text-[#FFA000] font-mono mt-1">
+            {s.diesel_conserved_liters}{' '}
+            <span className="text-xs font-normal text-[#89A7B7]">Liters</span>
           </p>
-          <p className="text-[10px] text-emerald-400 mt-1">~1.45 tonnes CO2 equivalent saved</p>
+          <p className="text-[10px] text-[#35D47A] mt-1">~1.45 tonnes CO2 equivalent saved</p>
         </div>
 
-        <div className="polar-card p-4 border border-emerald-500/30">
+        <div className="p-4 rounded-xl bg-[#0B1D29] border border-[#102B3B] shadow-lg">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase">Average Resilience</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span className="text-xs font-bold text-[#89A7B7] uppercase">Resilience Score</span>
+            <ShieldCheck className="w-4 h-4 text-[#35D47A]" />
           </div>
-          <p className="text-2xl font-black text-white font-mono mt-1">
-            {s.avg_resilience_score} <span className="text-xs font-bold text-slate-400">/ 100</span>
+          <p className="text-2xl font-black text-[#EFFFFF] font-mono mt-1">
+            {simState.resilienceScore || 92} <span className="text-xs font-bold text-[#89A7B7]">/ 100</span>
           </p>
-          <p className="text-[10px] text-emerald-400 mt-1">Safe Arctic Operating Margin</p>
+          <p className="text-[10px] text-[#35D47A] mt-1">Safe Arctic Operating Margin</p>
+        </div>
+      </div>
+
+      {/* DEDICATED DIGITAL TWIN SIMULATION RUNS & AUDIT LOG */}
+      <div className="p-5 rounded-2xl bg-[#0B1D29] border border-[#102B3B] shadow-xl space-y-3">
+        <div className="flex items-center justify-between pb-2 border-b border-[#102B3B]">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-[#48D5FF]" />
+            <h3 className="text-sm font-extrabold text-[#EFFFFF] uppercase tracking-wider">
+              DIGITAL TWIN SIMULATION RUNS & AUDIT LOG
+            </h3>
+          </div>
+          <span className="text-xs font-mono text-[#89A7B7]">Live Synchronized Runs</span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-[#102B3B] text-[#89A7B7] uppercase tracking-wider">
+                <th className="py-2.5 px-3">Execution Time</th>
+                <th className="py-2.5 px-3">Telemetry Run</th>
+                <th className="py-2.5 px-3">Renewable Share</th>
+                <th className="py-2.5 px-3">Station Load</th>
+                <th className="py-2.5 px-3">Diesel Used</th>
+                <th className="py-2.5 px-3">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#102B3B]/60">
+              {simLog.map((item) => (
+                <tr key={item.id} className="hover:bg-[#06131D]/60 transition-colors">
+                  <td className="py-2.5 px-3 font-mono text-[#89A7B7] flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-[#48D5FF]" />
+                    {item.time}
+                  </td>
+                  <td className="py-2.5 px-3 font-bold text-[#EFFFFF]">{item.title}</td>
+                  <td className="py-2.5 px-3 font-mono text-[#35D47A] font-bold">{item.renewablePct}%</td>
+                  <td className="py-2.5 px-3 font-mono text-[#48D5FF]">{item.loadKw} kW</td>
+                  <td className="py-2.5 px-3 font-mono text-[#FFA000]">{item.dieselUsed}</td>
+                  <td className="py-2.5 px-3">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#35D47A]/20 text-[#35D47A] border border-[#35D47A]/40">
+                      {item.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
       {/* MAIN REPORT CHART: GENERATION VS CONSUMPTION BREAKDOWN */}
-      <div className="polar-card p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-          <div>
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <FileBarChart2 className="w-4 h-4 text-cyan-400" />
-              Daily Energy Generation vs. Station Demand Breakdown (kWh)
-            </h3>
-            <p className="text-xs text-slate-400">
-              Stacked renewable contribution (Solar + Wind) compared against actual demand.
-            </p>
-          </div>
+      <div className="p-5 rounded-2xl bg-[#0B1D29] border border-[#102B3B] shadow-xl space-y-4">
+        <div>
+          <h3 className="text-sm font-extrabold text-[#EFFFFF] flex items-center gap-2 uppercase tracking-wider">
+            <FileBarChart2 className="w-4 h-4 text-[#48D5FF]" />
+            Energy Generation vs. Station Demand Breakdown (kWh)
+          </h3>
+          <p className="text-xs text-[#89A7B7]">
+            Stacked renewable contribution (Solar + Wind) compared against actual demand.
+          </p>
         </div>
 
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={reportData.daily_records}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1C2F57" vertical={false} />
-              <XAxis dataKey="date" stroke="#64748B" tick={{ fill: '#94A3B8', fontSize: 11 }} />
-              <YAxis stroke="#64748B" tick={{ fill: '#94A3B8', fontSize: 11 }} unit=" kWh" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#102B3B" vertical={false} />
+              <XAxis dataKey="date" stroke="#89A7B7" fontSize={11} />
+              <YAxis stroke="#89A7B7" fontSize={11} unit=" kWh" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#0D1836',
-                  borderColor: '#1E325A',
+                  backgroundColor: '#06131D',
+                  borderColor: '#102B3B',
                   borderRadius: '0.5rem',
-                  color: '#fff',
+                  color: '#EFFFFF',
                 }}
               />
               <Legend />
-              <Bar dataKey="solar_kwh" name="Solar Energy (kWh)" stackId="a" fill="#00E5FF" />
-              <Bar dataKey="wind_kwh" name="Wind Energy (kWh)" stackId="a" fill="#48CAE4" />
-              <Bar dataKey="diesel_kwh" name="Diesel Backup (kWh)" stackId="a" fill="#FF3D71" />
-              <Bar dataKey="load_kwh" name="Station Load Demand (kWh)" fill="#FFB300" />
+              <Bar dataKey="solar_kwh" name="Solar Energy (kWh)" stackId="a" fill="#FFD12A" />
+              <Bar dataKey="wind_kwh" name="Wind Energy (kWh)" stackId="a" fill="#299BD7" />
+              <Bar dataKey="diesel_kwh" name="Diesel Backup (kWh)" stackId="a" fill="#FFA000" />
+              <Bar dataKey="load_kwh" name="Station Load Demand (kWh)" fill="#48D5FF" />
             </BarChart>
           </ResponsiveContainer>
         </div>
-      </div>
-
-      {/* DETAILED DAILY AUDIT TABLE */}
-      <div className="polar-card p-5 overflow-x-auto">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <Clock className="w-4 h-4 text-cyan-400" />
-            Audit Telemetry Records Table
-          </h3>
-          <span className="text-xs text-slate-400 font-mono">Bharati Polar Base Station</span>
-        </div>
-
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b border-[#1C2F57] text-slate-400 uppercase tracking-wider">
-              <th className="py-2.5 px-3">Date / Day</th>
-              <th className="py-2.5 px-3">Solar Generation</th>
-              <th className="py-2.5 px-3">Wind Generation</th>
-              <th className="py-2.5 px-3">Diesel Backup</th>
-              <th className="py-2.5 px-3">Total Consumption</th>
-              <th className="py-2.5 px-3">Resilience Score</th>
-              <th className="py-2.5 px-3">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#132240]">
-            {reportData.daily_records.map((row) => (
-              <tr key={row.date} className="hover:bg-[#121F3F]/60 transition-colors">
-                <td className="py-2.5 px-3 font-bold text-white">{row.date}</td>
-                <td className="py-2.5 px-3 font-mono text-cyan-300">{row.solar_kwh} kWh</td>
-                <td className="py-2.5 px-3 font-mono text-blue-300">{row.wind_kwh} kWh</td>
-                <td className="py-2.5 px-3 font-mono text-slate-300">
-                  {row.diesel_kwh > 0 ? (
-                    <span className="text-red-400 font-bold">{row.diesel_kwh} kWh</span>
-                  ) : (
-                    <span className="text-emerald-400">0 kWh (Inactive)</span>
-                  )}
-                </td>
-                <td className="py-2.5 px-3 font-mono font-bold text-amber-400">{row.load_kwh} kWh</td>
-                <td className="py-2.5 px-3 font-mono text-emerald-400 font-bold">{row.resilience} / 100</td>
-                <td className="py-2.5 px-3">
-                  <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    Validated
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     </div>
   );

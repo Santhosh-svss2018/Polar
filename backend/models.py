@@ -6,11 +6,16 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), default="Administrator")
     username = Column(String(50), unique=True, index=True, nullable=False)
-    password = Column(String(100), nullable=False)
+    password_hash = Column(String(255), nullable=False)
     station = Column(String(100), default="Bharati Polar Station")
-    role = Column(String(50), default="System Administrator")
+    role = Column(String(50), default="operator")  # "admin" or "operator"
+    status = Column(String(50), default="active")  # "active" or "disabled"
     created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    last_login = Column(DateTime, nullable=True)
+
 
 class Station(Base):
     __tablename__ = "stations"

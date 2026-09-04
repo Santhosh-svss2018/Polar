@@ -10,30 +10,94 @@ const apiClient = axios.create({
   },
 });
 
-// Request interceptor to attach demo token if stored
+// Request interceptor to attach JWT token if stored
 apiClient.interceptors.request.use((config) => {
-  const user = localStorage.getItem('polar_user');
-  if (user) {
-    try {
-      const parsed = JSON.parse(user);
-      if (parsed.token) {
-        config.headers.Authorization = `Bearer ${parsed.token}`;
+  const token = localStorage.getItem('polar_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    // Fallback if token is in user object
+    const user = localStorage.getItem('polar_user');
+    if (user) {
+      try {
+        const parsed = JSON.parse(user);
+        if (parsed.token) {
+          config.headers.Authorization = `Bearer ${parsed.token}`;
+        }
+      } catch (e) {
+        console.error('Error parsing stored user auth', e);
       }
-    } catch (e) {
-      console.error('Error parsing stored user auth', e);
     }
   }
   return config;
 });
 
+// Response interceptor to handle 401 unauthorized
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Don't auto-redirect if we're already on login
+      if (!window.location.pathname.includes('/login')) {
+        localStorage.removeItem('polar_token');
+        localStorage.removeItem('polar_user');
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const api = {
-  // Auth
+  // Authentication APIs
   login: async (username, password, station) => {
     const res = await apiClient.post('/auth/login', { username, password, station });
     return res.data;
   },
-  
-  // Dashboard
+  getMe: async () => {
+    const res = await apiClient.get('/auth/me');
+    return res.data;
+  },
+  logout: async () => {
+    try {
+      const res = await apiClient.post('/auth/logout');
+      return res.data;
+    } catch (e) {
+      return { message: 'Logged out' };
+    }
+  },
+
+  // Admin Operator Management APIs
+  getOperators: async () => {
+    const res = await apiClient.get('/admin/operators');
+    return res.data;
+  },
+  createOperator: async (operatorData) => {
+    const res = await apiClient.post('/admin/operators', operatorData);
+    return res.data;
+  },
+  getOperator: async (operatorId) => {
+    const res = await apiClient.get(`/admin/operators/${operatorId}`);
+    return res.data;
+  },
+  updateOperator: async (operatorId, updateData) => {
+    const res = await apiClient.put(`/admin/operators/${operatorId}`, updateData);
+    return res.data;
+  },
+  resetOperatorPassword: async (operatorId, passwordData) => {
+    const res = await apiClient.put(`/admin/operators/${operatorId}/password`, passwordData);
+    return res.data;
+  },
+  updateOperatorStatus: async (operatorId, status) => {
+    const res = await apiClient.put(`/admin/operators/${operatorId}/status`, { status });
+    return res.data;
+  },
+  deleteOperator: async (operatorId) => {
+    const res = await apiClient.delete(`/admin/operators/${operatorId}`);
+    return res.data;
+  },
+
+  // Dashboard Telemetry
   getDashboard: async () => {
     const res = await apiClient.get('/dashboard');
     return res.data;
@@ -77,9 +141,21 @@ export const api = {
     return res.data;
   },
 
-  // Simulation
+  // Simulation & Real-time Telemetry
   runSimulation: async (simulationParams) => {
     const res = await apiClient.post('/simulation/run', simulationParams);
+    return res.data;
+  },
+  getLiveTelemetry: async () => {
+    const res = await apiClient.get('/simulation/telemetry');
+    return res.data;
+  },
+  updateLiveTelemetry: async (telemetryData) => {
+    const res = await apiClient.post('/simulation/telemetry', telemetryData);
+    return res.data;
+  },
+  recordDangerAlert: async (alertData) => {
+    const res = await apiClient.post('/simulation/danger-alert', alertData);
     return res.data;
   },
 

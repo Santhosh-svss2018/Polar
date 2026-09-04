@@ -28,8 +28,10 @@ import {
   ReferenceLine
 } from 'recharts';
 import api from '../services/api';
+import { useTelemetry } from '../context/TelemetryContext';
 
 export default function Alerts() {
+  const { activeAlerts } = useTelemetry();
   const [filterSeverity, setFilterSeverity] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [alerts, setAlerts] = useState([]);
@@ -134,7 +136,13 @@ export default function Alerts() {
     setResolvingId(null);
   };
 
-  const filteredAlerts = alerts.filter((a) => {
+  // Combine static anomaly alerts with live simulation risk alerts
+  const combinedAlerts = [
+    ...(activeAlerts || []).map((a) => ({ ...a, isLiveSimulation: true })),
+    ...alerts.filter((a) => !(activeAlerts || []).some((la) => la.id === a.id)),
+  ];
+
+  const filteredAlerts = combinedAlerts.filter((a) => {
     const matchesSeverity =
       filterSeverity === 'all' ||
       (filterSeverity === 'resolved' && a.status === 'Resolved') ||
@@ -146,10 +154,10 @@ export default function Alerts() {
     return matchesSeverity && matchesSearch;
   });
 
-  const activeCount = alerts.filter((a) => a.status === 'Active').length;
-  const criticalCount = alerts.filter((a) => a.severity === 'critical' && a.status === 'Active').length;
-  const warningCount = alerts.filter((a) => a.severity === 'warning' && a.status === 'Active').length;
-  const infoCount = alerts.filter((a) => a.severity === 'info' && a.status === 'Active').length;
+  const activeCount = combinedAlerts.filter((a) => a.status === 'Active').length;
+  const criticalCount = combinedAlerts.filter((a) => a.severity === 'critical' && a.status === 'Active').length;
+  const warningCount = combinedAlerts.filter((a) => a.severity === 'warning' && a.status === 'Active').length;
+  const infoCount = combinedAlerts.filter((a) => a.severity === 'info' && a.status === 'Active').length;
 
   return (
     <div className="space-y-6">

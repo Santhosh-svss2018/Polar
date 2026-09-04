@@ -11,15 +11,27 @@ def seed_database(db: Session = None):
 
     Base.metadata.create_all(bind=engine)
 
-    # 1. Seed User
-    if not db.query(User).filter(User.username == "admin").first():
+    # 1. Seed Default Admin User
+    from .auth import hash_password
+    existing_admin = db.query(User).filter(User.username == "admin").first()
+    if not existing_admin:
         admin = User(
+            name="System Administrator",
             username="admin",
-            password="polar123", # For prototype demo auth
+            password_hash=hash_password("polar123"),
             station="Bharati Polar Station",
-            role="System Administrator"
+            role="admin",
+            status="active"
         )
         db.add(admin)
+    else:
+        # Ensure correct role & hashed password
+        if not existing_admin.password_hash or not existing_admin.password_hash.startswith("$2"):
+            existing_admin.password_hash = hash_password("polar123")
+        existing_admin.role = "admin"
+        existing_admin.status = "active"
+        existing_admin.name = "System Administrator"
+
 
     # 2. Seed Station
     if not db.query(Station).filter(Station.name == "Bharati Polar Station").first():
