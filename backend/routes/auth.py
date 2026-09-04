@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from ..database import get_db
 from ..models import User
 from ..schemas import LoginRequest, LoginResponse, UserResponse
@@ -10,11 +11,14 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/login", response_model=LoginResponse)
 def login(req: LoginRequest, db: Session = Depends(get_db)):
-    # 1. Search for user by username
-    user = db.query(User).filter(User.username == req.username.strip()).first()
+    clean_username = req.username.strip().lower()
+    clean_password = req.password.strip()
+
+    # 1. Search for user by case-insensitive username
+    user = db.query(User).filter(func.lower(User.username) == clean_username).first()
     
     # 2. If user does not exist or password does not match
-    if not user or not verify_password(req.password, user.password_hash):
+    if not user or not verify_password(clean_password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password."
