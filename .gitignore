@@ -1,3 +1,22 @@
+# Node dependencies & build
 node_modules/
 dist/
 .env
+.env.local
+.env.production
+
+# Python cache & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
