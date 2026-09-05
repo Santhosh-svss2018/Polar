@@ -14,7 +14,8 @@ import {
   Settings,
   LogOut,
   Zap,
-  Snowflake
+  Snowflake,
+  X
 } from 'lucide-react';
 
 export default function Sidebar({ mobileOpen, setMobileOpen }) {
@@ -55,35 +56,47 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
       {/* Mobile Backdrop */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/80 z-40 lg:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-black/80 z-50 lg:hidden backdrop-blur-sm transition-opacity duration-300"
           onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
         />
       )}
 
       <aside
-        className={`fixed top-0 left-0 bottom-0 z-50 w-64 bg-[#06131D] border-r border-[#102B3B] flex flex-col justify-between transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 bottom-0 z-50 w-72 sm:w-64 bg-[#06131D] border-r border-[#102B3B] flex flex-col justify-between transition-transform duration-300 ease-in-out lg:translate-x-0 shadow-2xl ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Brand Top Header in Sidebar */}
-        <div>
+        <div className="flex-1 flex flex-col min-h-0">
           <div className="p-4 border-b border-[#102B3B]">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#299BD7] to-[#48D5FF] flex items-center justify-center shadow-lg shadow-[#48D5FF]/20 text-black">
-                <Zap className="w-6 h-6 text-black fill-current" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#299BD7] to-[#48D5FF] flex items-center justify-center shadow-lg shadow-[#48D5FF]/20 text-black">
+                  <Zap className="w-6 h-6 text-black fill-current" />
+                </div>
+                <div>
+                  <h1 className="font-extrabold text-base tracking-wider text-[#EFFFFF] flex items-center gap-1.5">
+                    POLAR-ENERGY <span className="text-[#48D5FF] font-black">AI</span>
+                  </h1>
+                  <p className="text-[9px] text-[#89A7B7] font-bold tracking-wider uppercase">
+                    POLAR SMART ENERGY MANAGEMENT
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="font-extrabold text-base tracking-wider text-[#EFFFFF] flex items-center gap-1.5">
-                  POLAR-ENERGY <span className="text-[#48D5FF] font-black">AI</span>
-                </h1>
-                <p className="text-[9px] text-[#89A7B7] font-bold tracking-wider uppercase">
-                  POLAR SMART ENERGY MANAGEMENT
-                </p>
-              </div>
+
+              {/* Explicit Mobile Close Button */}
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="lg:hidden p-2 -mr-1 rounded-lg text-slate-400 hover:text-white hover:bg-[#0B1D29] transition-colors"
+                aria-label="Close sidebar"
+              >
+                <X className="w-5 h-5 text-[#48D5FF]" />
+              </button>
             </div>
 
             {/* Station indicator tag */}
-            <div className="mt-3 px-2.5 py-1 rounded-md bg-[#0B1D29] border border-[#102B3B] flex items-center justify-between text-xs">
+            <div className="mt-3 px-2.5 py-1.5 rounded-md bg-[#0B1D29] border border-[#102B3B] flex items-center justify-between text-xs">
               <span className="flex items-center gap-1.5 text-[#48D5FF] font-medium text-[11px]">
                 <Snowflake className="w-3.5 h-3.5 text-[#48D5FF]" />
                 {t('nav.station')}
@@ -95,8 +108,8 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="p-2.5 space-y-1">
+          {/* Navigation Links with overflow scroll for small mobile heights */}
+          <nav className="p-2.5 space-y-1 overflow-y-auto flex-1 no-scrollbar">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (

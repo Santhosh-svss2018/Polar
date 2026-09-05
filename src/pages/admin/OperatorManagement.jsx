@@ -251,8 +251,8 @@ export default function OperatorManagement() {
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#102B3B]">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-[#48D5FF]/10 text-[#48D5FF]">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="p-2 rounded-xl bg-[#48D5FF]/10 text-[#48D5FF] flex-shrink-0">
               <Users className="w-5 h-5" />
             </div>
             <h2 className="text-xl sm:text-2xl font-black tracking-wide text-[#EFFFFF]">
@@ -267,11 +267,11 @@ export default function OperatorManagement() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           <button
             onClick={fetchOperators}
             disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#0B1D29] hover:bg-[#0E2432] border border-[#102B3B] text-xs font-bold text-[#89A7B7] hover:text-[#EFFFFF] transition-colors cursor-pointer"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-[#0B1D29] hover:bg-[#0E2432] border border-[#102B3B] text-xs font-bold text-[#89A7B7] hover:text-[#EFFFFF] transition-colors cursor-pointer min-h-[40px]"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
@@ -282,7 +282,7 @@ export default function OperatorManagement() {
               setFormError('');
               setShowAddModal(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-[#299BD7] to-[#48D5FF] hover:from-[#48D5FF] hover:to-[#35D47A] text-black font-extrabold text-xs tracking-wider uppercase transition-all shadow-lg shadow-[#48D5FF]/20 cursor-pointer"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#299BD7] to-[#48D5FF] hover:from-[#48D5FF] hover:to-[#35D47A] text-black font-extrabold text-xs tracking-wider uppercase transition-all shadow-lg shadow-[#48D5FF]/20 cursor-pointer min-h-[40px]"
           >
             <UserPlus className="w-4 h-4" />
             <span>ADD OPERATOR</span>
@@ -301,8 +301,8 @@ export default function OperatorManagement() {
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto no-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[620px]">
             <thead>
               <tr className="border-b border-[#102B3B] bg-[#06131D]/60 text-[10px] font-extrabold uppercase tracking-wider text-[#89A7B7]">
                 <th className="py-3.5 px-4">OPERATOR NAME</th>
@@ -462,8 +462,8 @@ export default function OperatorManagement() {
       {/* 1. ADD OPERATOR MODAL */}
       {/* ========================================================= */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="relative w-full max-w-md rounded-2xl bg-[#06131D] border border-[#102B3B] shadow-2xl p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto no-scrollbar rounded-2xl bg-[#06131D] border border-[#102B3B] shadow-2xl p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#102B3B]">
               <div className="flex items-center gap-2">
                 <UserPlus className="w-5 h-5 text-[#48D5FF]" />
@@ -471,7 +471,7 @@ export default function OperatorManagement() {
               </div>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-[#89A7B7] hover:text-white"
+                className="text-[#89A7B7] hover:text-white p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -495,7 +495,7 @@ export default function OperatorManagement() {
                   placeholder="e.g. polar_operator_01"
                   value={addForm.username}
                   onChange={(e) => setAddForm({ ...addForm, username: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none font-mono"
+                  className="w-full px-3 py-2.5 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none font-mono"
                 />
               </div>
 
@@ -508,7 +508,7 @@ export default function OperatorManagement() {
                   placeholder="e.g. Dr. Alex Mercer"
                   value={addForm.name}
                   onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none"
+                  className="w-full px-3 py-2.5 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none"
                 />
               </div>
 
@@ -522,7 +522,7 @@ export default function OperatorManagement() {
                   placeholder="••••••••"
                   value={addForm.password}
                   onChange={(e) => setAddForm({ ...addForm, password: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none"
+                  className="w-full px-3 py-2.5 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none"
                 />
               </div>
 
@@ -536,11 +536,11 @@ export default function OperatorManagement() {
                   placeholder="••••••••"
                   value={addForm.confirm_password}
                   onChange={(e) => setAddForm({ ...addForm, confirm_password: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none"
+                  className="w-full px-3 py-2.5 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <div>
                   <label className="block text-[10px] font-bold text-[#89A7B7] uppercase tracking-wider mb-1">
                     ROLE
@@ -549,7 +549,7 @@ export default function OperatorManagement() {
                     type="text"
                     disabled
                     value="OPERATOR"
-                    className="w-full px-3 py-2 bg-[#0E2432] border border-[#102B3B] rounded-lg text-xs text-[#48D5FF] font-mono font-bold outline-none cursor-not-allowed"
+                    className="w-full px-3 py-2.5 bg-[#0E2432] border border-[#102B3B] rounded-lg text-xs text-[#48D5FF] font-mono font-bold outline-none cursor-not-allowed"
                   />
                 </div>
 
@@ -560,7 +560,7 @@ export default function OperatorManagement() {
                   <select
                     value={addForm.status}
                     onChange={(e) => setAddForm({ ...addForm, status: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none cursor-pointer"
+                    className="w-full px-3 py-2.5 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none cursor-pointer"
                   >
                     <option value="active">ACTIVE</option>
                     <option value="disabled">DISABLED</option>
@@ -572,14 +572,14 @@ export default function OperatorManagement() {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-lg bg-[#0B1D29] hover:bg-[#0E2432] text-xs font-bold text-[#89A7B7] transition-colors cursor-pointer"
+                  className="px-4 py-2.5 rounded-lg bg-[#0B1D29] hover:bg-[#0E2432] text-xs font-bold text-[#89A7B7] transition-colors cursor-pointer"
                 >
                   CANCEL
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 rounded-lg bg-gradient-to-r from-[#299BD7] to-[#48D5FF] hover:from-[#48D5FF] hover:to-[#35D47A] text-black font-extrabold text-xs tracking-wider transition-all shadow-lg shadow-[#48D5FF]/20 cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-[#299BD7] to-[#48D5FF] hover:from-[#48D5FF] hover:to-[#35D47A] text-black font-extrabold text-xs tracking-wider transition-all shadow-lg shadow-[#48D5FF]/20 cursor-pointer disabled:opacity-50 min-h-[40px]"
                 >
                   {submitting ? 'CREATING...' : 'CREATE OPERATOR'}
                 </button>
@@ -593,8 +593,8 @@ export default function OperatorManagement() {
       {/* 2. EDIT OPERATOR MODAL */}
       {/* ========================================================= */}
       {showEditModal && selectedOp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="relative w-full max-w-md rounded-2xl bg-[#06131D] border border-[#102B3B] shadow-2xl p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto no-scrollbar rounded-2xl bg-[#06131D] border border-[#102B3B] shadow-2xl p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#102B3B]">
               <div className="flex items-center gap-2">
                 <Edit className="w-5 h-5 text-[#48D5FF]" />
@@ -604,7 +604,7 @@ export default function OperatorManagement() {
               </div>
               <button
                 onClick={() => setShowEditModal(false)}
-                className="text-[#89A7B7] hover:text-white"
+                className="text-[#89A7B7] hover:text-white p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -627,7 +627,7 @@ export default function OperatorManagement() {
                   required
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none"
+                  className="w-full px-3 py-2.5 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none"
                 />
               </div>
 
@@ -639,7 +639,7 @@ export default function OperatorManagement() {
                   value={editForm.status}
                   disabled={selectedOp.username === 'admin'}
                   onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none cursor-pointer disabled:opacity-50"
+                  className="w-full px-3 py-2.5 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none cursor-pointer disabled:opacity-50"
                 >
                   <option value="active">ACTIVE</option>
                   <option value="disabled">DISABLED</option>
@@ -650,14 +650,14 @@ export default function OperatorManagement() {
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="px-4 py-2 rounded-lg bg-[#0B1D29] hover:bg-[#0E2432] text-xs font-bold text-[#89A7B7] transition-colors cursor-pointer"
+                  className="px-4 py-2.5 rounded-lg bg-[#0B1D29] hover:bg-[#0E2432] text-xs font-bold text-[#89A7B7] transition-colors cursor-pointer"
                 >
                   CANCEL
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 rounded-lg bg-gradient-to-r from-[#299BD7] to-[#48D5FF] hover:from-[#48D5FF] hover:to-[#35D47A] text-black font-extrabold text-xs tracking-wider transition-all shadow-lg shadow-[#48D5FF]/20 cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-[#299BD7] to-[#48D5FF] hover:from-[#48D5FF] hover:to-[#35D47A] text-black font-extrabold text-xs tracking-wider transition-all shadow-lg shadow-[#48D5FF]/20 cursor-pointer disabled:opacity-50 min-h-[40px]"
                 >
                   {submitting ? 'SAVING...' : 'SAVE CHANGES'}
                 </button>
@@ -671,8 +671,8 @@ export default function OperatorManagement() {
       {/* 3. RESET PASSWORD MODAL */}
       {/* ========================================================= */}
       {showResetModal && selectedOp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="relative w-full max-w-md rounded-2xl bg-[#06131D] border border-[#102B3B] shadow-2xl p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto no-scrollbar rounded-2xl bg-[#06131D] border border-[#102B3B] shadow-2xl p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#102B3B]">
               <div className="flex items-center gap-2">
                 <KeyRound className="w-5 h-5 text-[#FFD12A]" />
@@ -682,7 +682,7 @@ export default function OperatorManagement() {
               </div>
               <button
                 onClick={() => setShowResetModal(false)}
-                className="text-[#89A7B7] hover:text-white"
+                className="text-[#89A7B7] hover:text-white p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -706,7 +706,7 @@ export default function OperatorManagement() {
                   placeholder="••••••••"
                   value={resetForm.new_password}
                   onChange={(e) => setResetForm({ ...resetForm, new_password: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none"
+                  className="w-full px-3 py-2.5 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none"
                 />
               </div>
 
@@ -720,7 +720,7 @@ export default function OperatorManagement() {
                   placeholder="••••••••"
                   value={resetForm.confirm_password}
                   onChange={(e) => setResetForm({ ...resetForm, confirm_password: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none"
+                  className="w-full px-3 py-2.5 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none"
                 />
               </div>
 
@@ -728,14 +728,14 @@ export default function OperatorManagement() {
                 <button
                   type="button"
                   onClick={() => setShowResetModal(false)}
-                  className="px-4 py-2 rounded-lg bg-[#0B1D29] hover:bg-[#0E2432] text-xs font-bold text-[#89A7B7] transition-colors cursor-pointer"
+                  className="px-4 py-2.5 rounded-lg bg-[#0B1D29] hover:bg-[#0E2432] text-xs font-bold text-[#89A7B7] transition-colors cursor-pointer"
                 >
                   CANCEL
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 rounded-lg bg-gradient-to-r from-[#FFD12A] to-[#35D47A] hover:from-[#35D47A] hover:to-[#48D5FF] text-black font-extrabold text-xs tracking-wider transition-all shadow-lg shadow-[#FFD12A]/20 cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-[#FFD12A] to-[#35D47A] hover:from-[#35D47A] hover:to-[#48D5FF] text-black font-extrabold text-xs tracking-wider transition-all shadow-lg shadow-[#FFD12A]/20 cursor-pointer disabled:opacity-50 min-h-[40px]"
                 >
                   {submitting ? 'UPDATING...' : 'UPDATE PASSWORD'}
                 </button>
@@ -749,10 +749,10 @@ export default function OperatorManagement() {
       {/* 4. DELETE CONFIRMATION MODAL */}
       {/* ========================================================= */}
       {showDeleteModal && selectedOp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="relative w-full max-w-md rounded-2xl bg-[#06131D] border border-[#FF6257]/40 shadow-2xl p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto no-scrollbar rounded-2xl bg-[#06131D] border border-[#FF6257]/40 shadow-2xl p-5 sm:p-6 space-y-4">
             <div className="flex items-center gap-3 text-[#FF6257]">
-              <div className="p-2 rounded-xl bg-[#FF6257]/15">
+              <div className="p-2 rounded-xl bg-[#FF6257]/15 flex-shrink-0">
                 <Trash2 className="w-6 h-6" />
               </div>
               <div>
@@ -771,7 +771,7 @@ export default function OperatorManagement() {
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 rounded-lg bg-[#0B1D29] hover:bg-[#0E2432] text-xs font-bold text-[#89A7B7] transition-colors cursor-pointer"
+                className="px-4 py-2.5 rounded-lg bg-[#0B1D29] hover:bg-[#0E2432] text-xs font-bold text-[#89A7B7] transition-colors cursor-pointer"
               >
                 CANCEL
               </button>
@@ -779,7 +779,7 @@ export default function OperatorManagement() {
                 type="button"
                 onClick={handleDeleteSubmit}
                 disabled={submitting}
-                className="px-5 py-2 rounded-lg bg-[#FF6257] hover:bg-[#FF6257]/80 text-white font-extrabold text-xs tracking-wider transition-all shadow-lg shadow-[#FF6257]/20 cursor-pointer disabled:opacity-50"
+                className="px-5 py-2.5 rounded-lg bg-[#FF6257] hover:bg-[#FF6257]/80 text-white font-extrabold text-xs tracking-wider transition-all shadow-lg shadow-[#FF6257]/20 cursor-pointer disabled:opacity-50 min-h-[40px]"
               >
                 {submitting ? 'DELETING...' : 'DELETE OPERATOR'}
               </button>

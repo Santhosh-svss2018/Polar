@@ -154,89 +154,90 @@ export default function Optimization() {
       )}
 
       {/* KPI Optimization Highlights */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="polar-card p-4 border border-emerald-500/30">
-          <span className="text-xs font-semibold text-slate-400 uppercase">Demand Curtailment</span>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-emerald-400 font-mono">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="polar-card p-3.5 sm:p-4 border border-emerald-500/30">
+          <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase">Demand Curtailment</span>
+          <div className="mt-1 sm:mt-2 flex items-baseline gap-1.5">
+            <span className="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">
               -{optResult.saved_kw}
             </span>
-            <span className="text-sm font-bold text-slate-300">kW</span>
+            <span className="text-xs sm:text-sm font-bold text-slate-300">kW</span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-1">From 58 kW baseline down to 47 kW</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">58 kW down to 47 kW</p>
         </div>
 
-        <div className="polar-card p-4 border border-cyan-500/30">
-          <span className="text-xs font-semibold text-slate-400 uppercase">Diesel Fuel Avoidance</span>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-cyan-300 font-mono">
+        <div className="polar-card p-3.5 sm:p-4 border border-cyan-500/30">
+          <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase">Diesel Fuel Avoidance</span>
+          <div className="mt-1 sm:mt-2 flex items-baseline gap-1.5">
+            <span className="text-2xl sm:text-3xl font-black text-cyan-300 font-mono">
               {optResult.diesel_avoided_hours}
             </span>
-            <span className="text-sm font-bold text-slate-300">Hours</span>
+            <span className="text-xs sm:text-sm font-bold text-slate-300">Hours</span>
           </div>
-          <p className="text-[10px] text-cyan-400 mt-1">~180 Liters diesel conserved</p>
+          <p className="text-[10px] text-cyan-400 mt-0.5">~180 L diesel saved</p>
         </div>
 
-        <div className="polar-card p-4 border border-blue-500/30">
-          <span className="text-xs font-semibold text-slate-400 uppercase">Battery Minimum Reserve</span>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-blue-300 font-mono">
+        <div className="polar-card p-3.5 sm:p-4 border border-blue-500/30">
+          <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase">Battery Min Reserve</span>
+          <div className="mt-1 sm:mt-2 flex items-baseline gap-1.5">
+            <span className="text-2xl sm:text-3xl font-black text-blue-300 font-mono">
               {optResult.battery_soc_protected}%
             </span>
           </div>
-          <p className="text-[10px] text-emerald-400 mt-1">&gt; 30% Safety rule strictly enforced</p>
+          <p className="text-[10px] text-emerald-400 mt-0.5">&gt; 30% Safety rule enforced</p>
         </div>
 
-        <div className="polar-card p-4 border border-purple-500/30">
-          <span className="text-xs font-semibold text-slate-400 uppercase">Critical P1 Security</span>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-purple-300 font-mono">100%</span>
+        <div className="polar-card p-3.5 sm:p-4 border border-purple-500/30">
+          <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase">Critical P1 Security</span>
+          <div className="mt-1 sm:mt-2 flex items-baseline gap-1.5">
+            <span className="text-2xl sm:text-3xl font-black text-purple-300 font-mono">100%</span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-1">Life Support & Heating Guaranteed</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">Heating & Life Support Safe</p>
         </div>
       </div>
 
       {/* MAIN DISPATCH CURVE */}
-      <div className="polar-card p-5">
+      <div className="polar-card p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
           <div>
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
+            <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
               <Zap className="w-4 h-4 text-cyan-400" />
               Optimized Power Dispatch & Peak Shaving Curve
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-[11px] sm:text-xs text-slate-400">
               Comparison between unoptimized baseline consumption and AI priority-curtailed load.
             </p>
           </div>
-          <div className="flex items-center gap-3 text-xs">
+          <div className="flex items-center gap-3 text-xs flex-wrap self-start sm:self-auto">
             <span className="flex items-center gap-1.5 text-red-400">
-              <span className="w-2.5 h-2.5 rounded bg-red-500/60"></span> Baseline (58 kW Peak)
+              <span className="w-2.5 h-2.5 rounded bg-red-500/60"></span> Baseline (58 kW)
             </span>
             <span className="flex items-center gap-1.5 text-emerald-300 font-bold">
-              <span className="w-2.5 h-2.5 rounded bg-emerald-400"></span> Optimized (47 kW Peak)
+              <span className="w-2.5 h-2.5 rounded bg-emerald-400"></span> Optimized (47 kW)
             </span>
           </div>
         </div>
 
-        <div className="h-72 w-full">
+        <div className="h-64 sm:h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={optResult.dispatch_curve}>
+            <LineChart data={optResult.dispatch_curve} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1C2F57" vertical={false} />
-              <XAxis dataKey="time" stroke="#64748B" tick={{ fill: '#94A3B8', fontSize: 11 }} />
-              <YAxis stroke="#64748B" tick={{ fill: '#94A3B8', fontSize: 11 }} unit=" kW" domain={[0, 65]} />
+              <XAxis dataKey="time" stroke="#64748B" tick={{ fill: '#94A3B8', fontSize: 10 }} tickLine={false} />
+              <YAxis stroke="#64748B" tick={{ fill: '#94A3B8', fontSize: 10 }} unit=" kW" domain={[0, 65]} tickLine={false} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#0D1836',
                   borderColor: '#1E325A',
                   borderRadius: '0.5rem',
                   color: '#fff',
+                  fontSize: '11px',
                 }}
               />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '6px' }} />
               <Line
                 type="monotone"
                 dataKey="baseline"
-                name="Baseline Uncontrolled Load (kW)"
+                name="Baseline Load"
                 stroke="#FF3D71"
                 strokeWidth={2}
                 strokeDasharray="4 4"
@@ -244,21 +245,21 @@ export default function Optimization() {
               <Line
                 type="monotone"
                 dataKey="optimized"
-                name="POLAR-ENERGY AI Optimized Load (kW)"
+                name="Optimized Load"
                 stroke="#00E676"
                 strokeWidth={3}
               />
               <Line
                 type="monotone"
                 dataKey="solar"
-                name="Solar Output (kW)"
+                name="Solar (kW)"
                 stroke="#00E5FF"
                 strokeWidth={2}
               />
               <Line
                 type="monotone"
                 dataKey="wind"
-                name="Wind Output (kW)"
+                name="Wind (kW)"
                 stroke="#48CAE4"
                 strokeWidth={2}
               />
@@ -266,6 +267,7 @@ export default function Optimization() {
           </ResponsiveContainer>
         </div>
       </div>
+
 
       {/* 2-COLUMN SECTION: LOAD PRIORITY SYSTEM + AI ACTIONS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

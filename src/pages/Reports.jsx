@@ -189,10 +189,10 @@ export default function Reports() {
   return (
     <div className="space-y-6">
       {/* Header & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#102B3B]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-2 border-b border-[#102B3B]">
         <div>
           <h2 className="text-xl sm:text-2xl font-black tracking-wide text-[#EFFFFF] flex items-center gap-2">
-            <FileBarChart2 className="w-6 h-6 text-[#48D5FF]" />
+            <FileBarChart2 className="w-5 h-5 sm:w-6 sm:h-6 text-[#48D5FF]" />
             {t('reports.title')}
           </h2>
           <p className="text-xs text-[#89A7B7] mt-1">
@@ -200,9 +200,9 @@ export default function Reports() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           {/* Period selector */}
-          <div className="flex bg-[#0B1D29] border border-[#102B3B] rounded-lg p-1">
+          <div className="flex bg-[#0B1D29] border border-[#102B3B] rounded-lg p-1 flex-1 sm:flex-none justify-between">
             {['daily', 'weekly', 'monthly'].map((p) => {
               const label = p === 'daily' ? t('reports.daily') : p === 'monthly' ? t('reports.monthly') : t('reports.weekly');
               const isActive = period === p;
@@ -210,7 +210,7 @@ export default function Reports() {
                 <button
                   key={p}
                   onClick={() => handlePeriodChange(p)}
-                  className={`px-3.5 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
+                  className={`px-3 sm:px-3.5 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-all duration-150 cursor-pointer flex-1 sm:flex-none text-center ${
                     isActive
                       ? 'bg-[#48D5FF] text-black font-extrabold shadow-md shadow-[#48D5FF]/20'
                       : 'text-[#89A7B7] hover:text-[#EFFFFF] hover:bg-[#102B3B]/50'
@@ -226,7 +226,7 @@ export default function Reports() {
           <button
             onClick={handleExportCSV}
             disabled={exporting}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#299BD7]/20 border border-[#299BD7]/40 text-[#48D5FF] text-xs font-bold hover:bg-[#299BD7]/30 transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#299BD7]/20 border border-[#299BD7]/40 text-[#48D5FF] text-xs font-bold hover:bg-[#299BD7]/30 transition-colors cursor-pointer w-full sm:w-auto"
           >
             <Download className="w-3.5 h-3.5" />
             <span>{exporting ? t('reports.exporting') : t('reports.exportCsv')}</span>
@@ -235,13 +235,13 @@ export default function Reports() {
       </div>
 
       {/* KPI METRIC CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-[#0B1D29] border border-[#102B3B] shadow-lg hover:border-[#48D5FF]/30 transition-colors">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="p-3.5 sm:p-4 rounded-xl bg-[#0B1D29] border border-[#102B3B] shadow-lg hover:border-[#48D5FF]/30 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#89A7B7] uppercase">{t('reports.totalRenewable')}</span>
+            <span className="text-[10px] sm:text-xs font-bold text-[#89A7B7] uppercase">{t('reports.totalRenewable')}</span>
             <Sun className="w-4 h-4 text-[#48D5FF]" />
           </div>
-          <p className="text-2xl font-black text-[#EFFFFF] font-mono mt-1">
+          <p className="text-xl sm:text-2xl font-black text-[#EFFFFF] font-mono mt-1">
             {(s.total_renewable_kwh).toLocaleString()}{' '}
             <span className="text-xs font-normal text-[#89A7B7]">kWh</span>
           </p>

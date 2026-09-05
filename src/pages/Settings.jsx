@@ -103,9 +103,9 @@ export default function Settings() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#102B3B]">
         <div>
-          <h2 className="text-xl sm:text-2xl font-black tracking-wide text-[#EFFFFF] flex items-center gap-2.5">
-            <SettingsIcon className="w-6 h-6 text-[#48D5FF]" />
-            {t('settings.title')}
+          <h2 className="text-xl sm:text-2xl font-black tracking-wide text-[#EFFFFF] flex items-center gap-2.5 flex-wrap">
+            <SettingsIcon className="w-6 h-6 text-[#48D5FF] flex-shrink-0" />
+            <span>{t('settings.title')}</span>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#48D5FF]/20 text-[#48D5FF] border border-[#48D5FF]/30 font-medium">
               {t('settings.configurable')}
             </span>
@@ -118,7 +118,7 @@ export default function Settings() {
         <button
           onClick={handleSaveSettings}
           disabled={saving}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-[#299BD7] to-[#48D5FF] hover:from-[#299BD7]/90 hover:to-[#48D5FF]/90 text-black font-extrabold text-xs tracking-wider transition-all shadow-lg shadow-[#48D5FF]/20 cursor-pointer self-start sm:self-auto"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-[#299BD7] to-[#48D5FF] hover:from-[#299BD7]/90 hover:to-[#48D5FF]/90 text-black font-extrabold text-xs tracking-wider transition-all shadow-lg shadow-[#48D5FF]/20 cursor-pointer min-h-[40px]"
         >
           <Save className="w-4 h-4" />
           <span>{saving ? t('settings.saving') : t('settings.saveBtn')}</span>
@@ -375,7 +375,7 @@ export default function Settings() {
           <button
             type="submit"
             disabled={saving}
-            className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-[#299BD7] to-[#48D5FF] hover:from-[#299BD7]/90 hover:to-[#48D5FF]/90 text-black font-extrabold text-xs tracking-wider transition-all shadow-lg shadow-[#48D5FF]/20 cursor-pointer"
+            className="w-full sm:w-auto flex items-center justify-center px-6 py-2.5 rounded-lg bg-gradient-to-r from-[#299BD7] to-[#48D5FF] hover:from-[#299BD7]/90 hover:to-[#48D5FF]/90 text-black font-extrabold text-xs tracking-wider transition-all shadow-lg shadow-[#48D5FF]/20 cursor-pointer min-h-[42px]"
           >
             {saving ? t('settings.saving') : t('settings.saveBtn')}
           </button>

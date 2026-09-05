@@ -185,138 +185,139 @@ export default function Alerts() {
       </div>
 
       {/* Severity Counters Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div
           onClick={() => setFilterSeverity('critical')}
-          className={`polar-card p-4 border cursor-pointer transition-all ${
+          className={`polar-card p-3.5 sm:p-4 border cursor-pointer transition-all ${
             filterSeverity === 'critical' ? 'border-red-500 bg-red-500/10' : 'border-red-500/30 hover:border-red-500/60'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-red-400 uppercase">Critical</span>
+            <span className="text-[10px] sm:text-xs font-semibold text-red-400 uppercase">Critical</span>
             <AlertOctagon className="w-4 h-4 text-red-400" />
           </div>
-          <p className="text-3xl font-black text-white font-mono mt-1">{criticalCount}</p>
-          <p className="text-[10px] text-red-300 mt-1">Immediate action needed</p>
+          <p className="text-2xl sm:text-3xl font-black text-white font-mono mt-1">{criticalCount}</p>
+          <p className="text-[10px] text-red-300 mt-0.5">Immediate action</p>
         </div>
 
         <div
           onClick={() => setFilterSeverity('warning')}
-          className={`polar-card p-4 border cursor-pointer transition-all ${
+          className={`polar-card p-3.5 sm:p-4 border cursor-pointer transition-all ${
             filterSeverity === 'warning' ? 'border-amber-500 bg-amber-500/10' : 'border-amber-500/30 hover:border-amber-500/60'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-400 uppercase">Warning</span>
+            <span className="text-[10px] sm:text-xs font-semibold text-amber-400 uppercase">Warning</span>
             <AlertTriangle className="w-4 h-4 text-amber-400" />
           </div>
-          <p className="text-3xl font-black text-white font-mono mt-1">{warningCount}</p>
-          <p className="text-[10px] text-amber-300 mt-1">Forecasted shortage risk</p>
+          <p className="text-2xl sm:text-3xl font-black text-white font-mono mt-1">{warningCount}</p>
+          <p className="text-[10px] text-amber-300 mt-0.5">Forecast shortage</p>
         </div>
 
         <div
           onClick={() => setFilterSeverity('info')}
-          className={`polar-card p-4 border cursor-pointer transition-all ${
+          className={`polar-card p-3.5 sm:p-4 border cursor-pointer transition-all ${
             filterSeverity === 'info' ? 'border-cyan-500 bg-cyan-500/10' : 'border-cyan-500/30 hover:border-cyan-500/60'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-cyan-400 uppercase">Info</span>
+            <span className="text-[10px] sm:text-xs font-semibold text-cyan-400 uppercase">Info</span>
             <Info className="w-4 h-4 text-cyan-400" />
           </div>
-          <p className="text-3xl font-black text-white font-mono mt-1">{infoCount}</p>
-          <p className="text-[10px] text-cyan-300 mt-1">Telemetry notifications</p>
+          <p className="text-2xl sm:text-3xl font-black text-white font-mono mt-1">{infoCount}</p>
+          <p className="text-[10px] text-cyan-300 mt-0.5">Notifications</p>
         </div>
 
         <div
           onClick={() => setFilterSeverity('resolved')}
-          className={`polar-card p-4 border cursor-pointer transition-all ${
+          className={`polar-card p-3.5 sm:p-4 border cursor-pointer transition-all ${
             filterSeverity === 'resolved' ? 'border-emerald-500 bg-emerald-500/10' : 'border-emerald-500/30 hover:border-emerald-500/60'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-400 uppercase">Resolved</span>
+            <span className="text-[10px] sm:text-xs font-semibold text-emerald-400 uppercase">Resolved</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           </div>
-          <p className="text-3xl font-black text-white font-mono mt-1">
+          <p className="text-2xl sm:text-3xl font-black text-white font-mono mt-1">
             {alerts.filter((a) => a.status === 'Resolved').length}
           </p>
-          <p className="text-[10px] text-emerald-300 mt-1">Cleared events</p>
+          <p className="text-[10px] text-emerald-300 mt-0.5">Cleared events</p>
         </div>
       </div>
 
       {/* ANOMALY SPOTLIGHT & ISOLATION FOREST VISUALIZATION */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
         {/* Heater 03 Outlier Card */}
-        <div className="polar-card p-5 border border-red-500/40 bg-gradient-to-b from-red-500/10 to-transparent">
+        <div className="polar-card p-4 sm:p-5 border border-red-500/40 bg-gradient-to-b from-red-500/10 to-transparent">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AlertOctagon className="w-5 h-5 text-red-400 animate-pulse" />
-              <h3 className="text-sm font-bold text-white">Active Anomaly Detected</h3>
+              <AlertOctagon className="w-5 h-5 text-red-400 animate-pulse flex-shrink-0" />
+              <h3 className="text-xs sm:text-sm font-bold text-white">Active Anomaly Detected</h3>
             </div>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 font-mono font-bold">
-              Z-Score: +3.82
+              Z: +3.82
             </span>
           </div>
 
-          <div className="mt-4 p-3 rounded-lg bg-[#0C152D] border border-red-500/30 space-y-2">
+          <div className="mt-3 p-3 rounded-lg bg-[#0C152D] border border-red-500/30 space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Target Subsystem:</span>
-              <span className="font-bold text-white">Heater 03 (Living Quarters)</span>
+              <span className="text-slate-400">Target:</span>
+              <span className="font-bold text-white text-[11px] sm:text-xs truncate">Heater 03 (Quarters)</span>
             </div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400">Normal Range:</span>
               <span className="font-mono text-emerald-300">4.0 - 6.0 kW</span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Current Measured:</span>
-              <span className="font-mono font-bold text-red-400 text-sm">12.5 kW</span>
+              <span className="text-slate-400">Measured:</span>
+              <span className="font-mono font-bold text-red-400">12.5 kW</span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Deviation Ratio:</span>
+              <span className="text-slate-400">Deviation:</span>
               <span className="font-bold text-red-400 font-mono">+140% Overload</span>
             </div>
           </div>
 
-          <p className="text-[11px] text-slate-300 mt-3 leading-relaxed">
+          <p className="text-[11px] text-slate-300 mt-2.5 leading-relaxed">
             IsolationForest classified continuous heating surge as high-confidence thermal relay fault. Recommended inspection of thermostat contactors.
           </p>
 
           <button
             onClick={() => handleResolveAlert('ALT-101')}
-            className="w-full mt-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-500/40 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+            className="w-full mt-3 py-2.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-500/40 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <CheckCircle2 className="w-4 h-4" />
-            <span>Mark Heater 03 Inspected / Acknowledged</span>
+            <span>Mark Heater 03 Inspected</span>
           </button>
         </div>
 
         {/* Anomaly Timeline Scatter Chart */}
-        <div className="polar-card p-5 lg:col-span-2">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Activity className="w-4 h-4 text-cyan-400" />
+        <div className="polar-card p-4 sm:p-5 lg:col-span-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
+            <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+              <Activity className="w-4 h-4 text-cyan-400 flex-shrink-0" />
               Real-Time Subsystem Power Anomaly Tracking (kW)
             </h3>
-            <span className="text-xs text-slate-400 font-mono">IsolationForest Detection Band</span>
+            <span className="text-[10px] text-slate-400 font-mono">IsolationForest Detection</span>
           </div>
 
-          <div className="h-60 w-full mt-3">
+          <div className="h-56 sm:h-60 w-full mt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
+              <ScatterChart margin={{ top: 10, right: 10, bottom: 10, left: -22 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1C2F57" />
-                <XAxis dataKey="time" stroke="#64748B" tick={{ fill: '#94A3B8', fontSize: 11 }} />
-                <YAxis dataKey="load" stroke="#64748B" tick={{ fill: '#94A3B8', fontSize: 11 }} unit=" kW" domain={[0, 15]} />
+                <XAxis dataKey="time" stroke="#64748B" tick={{ fill: '#94A3B8', fontSize: 10 }} tickLine={false} />
+                <YAxis dataKey="load" stroke="#64748B" tick={{ fill: '#94A3B8', fontSize: 10 }} unit=" kW" domain={[0, 15]} tickLine={false} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#0D1836',
                     borderColor: '#1E325A',
                     borderRadius: '0.5rem',
                     color: '#fff',
+                    fontSize: '11px',
                   }}
                 />
-                <ReferenceLine y={6} stroke="#00E676" strokeDasharray="3 3" label={{ value: 'Upper Normal (6 kW)', fill: '#00E676', fontSize: 10 }} />
-                <ReferenceLine y={10} stroke="#FF3D71" strokeDasharray="3 3" label={{ value: 'Critical Anomaly (>10 kW)', fill: '#FF3D71', fontSize: 10 }} />
+                <ReferenceLine y={6} stroke="#00E676" strokeDasharray="3 3" label={{ value: 'Normal (6 kW)', fill: '#00E676', fontSize: 9 }} />
+                <ReferenceLine y={10} stroke="#FF3D71" strokeDasharray="3 3" label={{ value: 'Critical (>10 kW)', fill: '#FF3D71', fontSize: 9 }} />
                 <Scatter name="Heater 03 Telemetry" data={anomalyScatterData} fill="#FF3D71" />
               </ScatterChart>
             </ResponsiveContainer>
@@ -325,23 +326,23 @@ export default function Alerts() {
       </div>
 
       {/* FILTER & SEARCH BAR */}
-      <div className="polar-card p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+      <div className="polar-card p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar flex-nowrap pb-1 sm:pb-0">
           <button
             onClick={() => setFilterSeverity('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex-shrink-0 ${
               filterSeverity === 'all'
-                ? 'bg-cyan-500 text-black'
+                ? 'bg-cyan-500 text-black font-bold'
                 : 'bg-[#111C3A] text-slate-400 hover:text-white border border-[#1E325A]'
             }`}
           >
-            All Alerts ({alerts.length})
+            All ({alerts.length})
           </button>
           <button
             onClick={() => setFilterSeverity('critical')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex-shrink-0 ${
               filterSeverity === 'critical'
-                ? 'bg-red-500 text-white'
+                ? 'bg-red-500 text-white font-bold'
                 : 'bg-[#111C3A] text-slate-400 hover:text-white border border-[#1E325A]'
             }`}
           >
@@ -349,9 +350,9 @@ export default function Alerts() {
           </button>
           <button
             onClick={() => setFilterSeverity('warning')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex-shrink-0 ${
               filterSeverity === 'warning'
-                ? 'bg-amber-500 text-black'
+                ? 'bg-amber-500 text-black font-bold'
                 : 'bg-[#111C3A] text-slate-400 hover:text-white border border-[#1E325A]'
             }`}
           >
@@ -359,9 +360,9 @@ export default function Alerts() {
           </button>
           <button
             onClick={() => setFilterSeverity('info')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex-shrink-0 ${
               filterSeverity === 'info'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
                 : 'bg-[#111C3A] text-slate-400 hover:text-white border border-[#1E325A]'
             }`}
           >
@@ -370,13 +371,13 @@ export default function Alerts() {
         </div>
 
         <div className="relative w-full sm:w-64">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
-            placeholder="Search alerts or subsystems..."
+            placeholder="Search alerts or systems..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-[#091124] border border-[#1C2F57] focus:border-cyan-400 rounded-lg text-xs text-slate-200 outline-none"
+            className="w-full pl-9 pr-3 py-2 bg-[#091124] border border-[#1C2F57] focus:border-cyan-400 rounded-lg text-xs text-slate-200 outline-none"
           />
         </div>
       </div>
@@ -401,10 +402,10 @@ export default function Alerts() {
                   : 'border-cyan-500/30 bg-[#0F1B38]'
               }`}
             >
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
                 <div className="flex items-start gap-3">
                   <div
-                    className={`p-2.5 rounded-xl mt-0.5 ${
+                    className={`p-2.5 rounded-xl mt-0.5 flex-shrink-0 ${
                       isResolved
                         ? 'bg-emerald-500/20 text-emerald-400'
                         : isCritical
@@ -425,12 +426,12 @@ export default function Alerts() {
                     )}
                   </div>
 
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                       <span className="font-mono text-xs font-bold text-slate-400">{alert.id}</span>
-                      <h4 className="text-sm font-bold text-white">{alert.title}</h4>
+                      <h4 className="text-xs sm:text-sm font-bold text-white">{alert.title}</h4>
                       <span
-                        className={`text-[10px] px-2 py-0.2 rounded-full font-bold uppercase ${
+                        className={`text-[9px] sm:text-[10px] px-2 py-0.2 rounded-full font-bold uppercase ${
                           isResolved
                             ? 'bg-emerald-500/20 text-emerald-300'
                             : isCritical
@@ -447,8 +448,8 @@ export default function Alerts() {
                     <p className="text-xs text-cyan-400 font-medium mt-0.5">{alert.equipment}</p>
                     <p className="text-xs text-slate-300 mt-1 leading-relaxed">{alert.desc}</p>
 
-                    <div className="mt-3 flex flex-wrap items-center gap-4 text-[11px] text-slate-400">
-                      <span className="font-mono text-slate-300">Metric: {alert.value}</span>
+                    <div className="mt-2.5 flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
+                      <span className="font-mono text-slate-300">{alert.value}</span>
                       <span>•</span>
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
@@ -458,12 +459,12 @@ export default function Alerts() {
                   </div>
                 </div>
 
-                <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 border-t sm:border-t-0 border-[#1C2F57] pt-2 sm:pt-0">
+                <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 border-t sm:border-t-0 border-[#1C2F57] pt-2 sm:pt-0 pl-11 sm:pl-0">
                   {alert.status === 'Active' ? (
                     <button
                       onClick={() => handleResolveAlert(alert.id)}
                       disabled={resolvingId === alert.id}
-                      className="px-3 py-1.5 rounded-lg bg-[#111C3A] hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-300 border border-[#1E325A] hover:border-emerald-500/30 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-lg bg-[#111C3A] hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-300 border border-[#1E325A] hover:border-emerald-500/30 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer w-full sm:w-auto justify-center"
                     >
                       <Check className="w-3.5 h-3.5 text-emerald-400" />
                       <span>{resolvingId === alert.id ? 'Resolving...' : 'Acknowledge / Resolve'}</span>
@@ -471,7 +472,7 @@ export default function Alerts() {
                   ) : (
                     <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      Resolved by Operator
+                      Resolved
                     </span>
                   )}
                 </div>
@@ -483,3 +484,4 @@ export default function Alerts() {
     </div>
   );
 }
+

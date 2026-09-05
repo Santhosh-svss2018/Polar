@@ -197,11 +197,11 @@ export default function DataManagement() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#1C2F57]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-2 border-b border-[#1C2F57]">
         <div>
           <h2 className="text-xl sm:text-2xl font-black tracking-wide text-white flex items-center gap-2.5">
             DATA MANAGEMENT & TELEMETRY
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-medium">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-medium hidden xs:inline-block">
               SQLITE & SENSORS
             </span>
           </h2>
@@ -210,65 +210,66 @@ export default function DataManagement() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <button
             onClick={handleDownloadTemplate}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#111C3A] hover:bg-[#16244A] border border-[#1E325A] text-xs font-semibold text-cyan-300 transition-colors"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#111C3A] hover:bg-[#16244A] border border-[#1E325A] text-xs font-semibold text-cyan-300 transition-colors flex-1 sm:flex-none"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Sample CSV Template</span>
+            <span>CSV Template</span>
           </button>
 
           <button
             onClick={handleReseed}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#111C3A] hover:bg-[#16244A] border border-[#1E325A] text-xs font-semibold text-slate-300 transition-colors"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#111C3A] hover:bg-[#16244A] border border-[#1E325A] text-xs font-semibold text-slate-300 transition-colors flex-1 sm:flex-none"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Re-seed Demo Data</span>
+            <span>Re-seed Demo</span>
           </button>
         </div>
       </div>
 
       {/* Database Statistics Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="polar-card p-4 border border-cyan-500/30">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="polar-card p-3.5 sm:p-4 border border-cyan-500/30">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase">Total Hourly Records</span>
+            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase">Hourly Records</span>
             <Database className="w-4 h-4 text-cyan-400" />
           </div>
-          <p className="text-2xl font-black text-white font-mono mt-1">
+          <p className="text-xl sm:text-2xl font-black text-white font-mono mt-1">
             {dbStats.total_records.toLocaleString()}
           </p>
-          <p className="text-[10px] text-cyan-300 mt-1">{dbStats.historical_period}</p>
+          <p className="text-[10px] text-cyan-300 mt-0.5 truncate">{dbStats.historical_period}</p>
         </div>
 
-        <div className="polar-card p-4 border border-blue-500/30">
+        <div className="polar-card p-3.5 sm:p-4 border border-blue-500/30">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase">Database Engine</span>
+            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase">DB Engine</span>
             <HardDrive className="w-4 h-4 text-blue-400" />
           </div>
-          <p className="text-sm font-bold text-white mt-1">SQLite 3 / SQLAlchemy</p>
-          <p className="text-[10px] text-blue-300 mt-1">polar_energy.db (Localhost)</p>
+          <p className="text-xs sm:text-sm font-bold text-white mt-1 truncate">SQLite 3 / SQLAlchemy</p>
+          <p className="text-[10px] text-blue-300 mt-0.5 truncate">polar_energy.db</p>
         </div>
 
-        <div className="polar-card p-4 border border-emerald-500/30">
+        <div className="polar-card p-3.5 sm:p-4 border border-emerald-500/30">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase">Ingestion Schema</span>
+            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase">Schema</span>
             <Layers className="w-4 h-4 text-emerald-400" />
           </div>
-          <p className="text-sm font-bold text-white mt-1">9 Sensor Attributes</p>
-          <p className="text-[10px] text-emerald-400 mt-1">Solar, Wind, Battery, Load, Temp</p>
+          <p className="text-xs sm:text-sm font-bold text-white mt-1">9 Attributes</p>
+          <p className="text-[10px] text-emerald-400 mt-0.5 truncate">Solar, Wind, Battery, Load</p>
         </div>
 
-        <div className="polar-card p-4 border border-purple-500/30">
+        <div className="polar-card p-3.5 sm:p-4 border border-purple-500/30">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase">Last Database Sync</span>
+            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase">Last Sync</span>
             <Clock className="w-4 h-4 text-purple-400" />
           </div>
-          <p className="text-sm font-bold text-white mt-1">{dbStats.last_sync}</p>
-          <p className="text-[10px] text-purple-300 mt-1">Bharati Telemetry Node</p>
+          <p className="text-xs sm:text-sm font-bold text-white mt-1 truncate">{dbStats.last_sync}</p>
+          <p className="text-[10px] text-purple-300 mt-0.5">Bharati Telemetry Node</p>
         </div>
       </div>
+
 
       {/* UPLOAD DROPZONE */}
       <div className="polar-card p-6">

@@ -104,35 +104,35 @@ export default function Dashboard() {
       </div>
 
       {/* 5 Core Top Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {/* 1. Solar Generation */}
-        <div className={`p-4 rounded-xl bg-[#0B1D29] border ${simState.solarRisk ? 'border-[#FF6257] animate-pulse' : 'border-[#102B3B]'} shadow-lg`}>
+        <div className={`p-3.5 sm:p-4 rounded-xl bg-[#0B1D29] border ${simState.solarRisk ? 'border-[#FF6257] animate-pulse' : 'border-[#102B3B]'} shadow-lg`}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-[#89A7B7] uppercase">Solar Harvest</span>
+            <span className="text-[10px] sm:text-[11px] font-bold text-[#89A7B7] uppercase">Solar Harvest</span>
             <div className={`p-1.5 rounded-lg ${simState.solarRisk ? 'bg-[#FF6257]/20 text-[#FF6257]' : 'bg-[#FFD12A]/10 text-[#FFD12A]'}`}>
               <Sun className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-mono font-black text-[#EFFFFF]">
+          <div className="text-xl sm:text-2xl font-mono font-black text-[#EFFFFF]">
             {solarKw} <span className="text-xs text-[#89A7B7] font-sans font-normal">kW</span>
           </div>
           <div className="mt-2 text-[10px] font-semibold flex items-center justify-between">
             <span className="text-[#89A7B7]">State:</span>
             <span className={simState.solarRisk ? 'text-[#FF6257] font-bold' : 'text-[#35D47A]'}>
-              {simState.solarRisk ? 'DEFICIT RISK' : `${simState.solarEfficiency}% Eff`}
+              {simState.solarRisk ? 'DEFICIT' : `${simState.solarEfficiency}% Eff`}
             </span>
           </div>
         </div>
 
         {/* 2. Wind Generation */}
-        <div className="p-4 rounded-xl bg-[#0B1D29] border border-[#102B3B] shadow-lg">
+        <div className="p-3.5 sm:p-4 rounded-xl bg-[#0B1D29] border border-[#102B3B] shadow-lg">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-[#89A7B7] uppercase">Wind Generation</span>
+            <span className="text-[10px] sm:text-[11px] font-bold text-[#89A7B7] uppercase">Wind Generation</span>
             <div className="p-1.5 rounded-lg bg-[#299BD7]/10 text-[#299BD7]">
               <Wind className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-mono font-black text-[#EFFFFF]">
+          <div className="text-xl sm:text-2xl font-mono font-black text-[#EFFFFF]">
             {windKw} <span className="text-xs text-[#89A7B7] font-sans font-normal">kW</span>
           </div>
           <div className="mt-2 text-[10px] font-semibold flex items-center justify-between">
@@ -142,14 +142,14 @@ export default function Dashboard() {
         </div>
 
         {/* 3. Battery Storage */}
-        <div className={`p-4 rounded-xl bg-[#0B1D29] border ${simState.batteryRisk ? 'border-[#FF6257] animate-pulse' : 'border-[#102B3B]'} shadow-lg`}>
+        <div className={`p-3.5 sm:p-4 rounded-xl bg-[#0B1D29] border ${simState.batteryRisk ? 'border-[#FF6257] animate-pulse' : 'border-[#102B3B]'} shadow-lg`}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-[#89A7B7] uppercase">Battery Reserve</span>
+            <span className="text-[10px] sm:text-[11px] font-bold text-[#89A7B7] uppercase">Battery Reserve</span>
             <div className={`p-1.5 rounded-lg ${simState.batteryRisk ? 'bg-[#FF6257]/20 text-[#FF6257]' : 'bg-[#35D47A]/10 text-[#35D47A]'}`}>
               <BatteryCharging className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-mono font-black text-[#EFFFFF]">
+          <div className="text-xl sm:text-2xl font-mono font-black text-[#EFFFFF]">
             {batterySoc}%
           </div>
           <div className="mt-2 text-[10px] font-semibold flex items-center justify-between">
@@ -161,33 +161,33 @@ export default function Dashboard() {
         </div>
 
         {/* 4. Total Station Load */}
-        <div className="p-4 rounded-xl bg-[#0B1D29] border border-[#102B3B] shadow-lg">
+        <div className="p-3.5 sm:p-4 rounded-xl bg-[#0B1D29] border border-[#102B3B] shadow-lg">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-[#89A7B7] uppercase">Station Demand</span>
+            <span className="text-[10px] sm:text-[11px] font-bold text-[#89A7B7] uppercase">Station Demand</span>
             <div className="p-1.5 rounded-lg bg-[#48D5FF]/10 text-[#48D5FF]">
               <Zap className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-mono font-black text-[#EFFFFF]">
+          <div className="text-xl sm:text-2xl font-mono font-black text-[#EFFFFF]">
             {loadKw} <span className="text-xs text-[#89A7B7] font-sans font-normal">kW</span>
           </div>
           <div className="mt-2 text-[10px] font-semibold flex items-center justify-between">
-            <span className="text-[#89A7B7]">Net Balance:</span>
+            <span className="text-[#89A7B7]">Balance:</span>
             <span className={netBalanceKw >= 0 ? 'text-[#35D47A] font-bold' : 'text-[#FF6257] font-bold'}>
               {netBalanceKw >= 0 ? `+${netBalanceKw} kW` : `${netBalanceKw} kW`}
             </span>
           </div>
         </div>
 
-        {/* 5. Diesel Level & Output */}
-        <div className={`p-4 rounded-xl bg-[#0B1D29] border ${dieselKw > 0 ? 'border-[#FFA000]/60' : 'border-[#102B3B]'} shadow-lg`}>
+        {/* 5. Diesel Level & Output (Spans 2 cols on mobile for balanced grid) */}
+        <div className={`col-span-2 md:col-span-1 p-3.5 sm:p-4 rounded-xl bg-[#0B1D29] border ${dieselKw > 0 ? 'border-[#FFA000]/60' : 'border-[#102B3B]'} shadow-lg`}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-[#89A7B7] uppercase">Diesel Reserve</span>
+            <span className="text-[10px] sm:text-[11px] font-bold text-[#89A7B7] uppercase">Diesel Reserve</span>
             <div className={`p-1.5 rounded-lg ${dieselKw > 0 ? 'bg-[#FFA000]/20 text-[#FFA000]' : 'bg-[#E5A93C]/10 text-[#E5A93C]'}`}>
               <Fuel className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-mono font-black text-[#EFFFFF]">
+          <div className="text-xl sm:text-2xl font-mono font-black text-[#EFFFFF]">
             {dieselFuelPct}%
           </div>
           <div className="mt-2 text-[10px] font-semibold flex items-center justify-between">
@@ -200,19 +200,19 @@ export default function Dashboard() {
       </div>
 
       {/* Main Charts & Telemetry Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
         {/* Left 2 Cols: 24h Generation vs Load Timeline */}
-        <div className="lg:col-span-2 p-5 rounded-2xl bg-[#0B1D29] border border-[#102B3B] shadow-xl space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="lg:col-span-2 p-4 sm:p-5 rounded-2xl bg-[#0B1D29] border border-[#102B3B] shadow-xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h3 className="text-sm font-extrabold text-[#EFFFFF] uppercase tracking-wider">
+              <h3 className="text-xs sm:text-sm font-extrabold text-[#EFFFFF] uppercase tracking-wider">
                 24-HOUR GENERATION & LOAD DISPATCH
               </h3>
-              <p className="text-xs text-[#89A7B7] mt-0.5">
+              <p className="text-[11px] sm:text-xs text-[#89A7B7] mt-0.5">
                 Live microgrid power generation curves synced with current simulation state
               </p>
             </div>
-            <div className="flex items-center gap-3 text-xs font-mono">
+            <div className="flex items-center gap-3 text-xs font-mono self-start sm:self-auto">
               <span className="flex items-center gap-1.5 text-[#FFD12A]">
                 <span className="w-2.5 h-2.5 rounded-sm bg-[#FFD12A]" /> Solar
               </span>
@@ -225,9 +225,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="h-[280px] w-full">
+          <div className="h-[240px] sm:h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={timelineData}>
+              <AreaChart data={timelineData} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="solGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#FFD12A" stopOpacity={0.4} />
@@ -243,10 +243,10 @@ export default function Dashboard() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#102B3B" />
-                <XAxis dataKey="time" stroke="#89A7B7" fontSize={11} />
-                <YAxis stroke="#89A7B7" fontSize={11} unit=" kW" />
+                <XAxis dataKey="time" stroke="#89A7B7" fontSize={10} tickLine={false} />
+                <YAxis stroke="#89A7B7" fontSize={10} unit=" kW" tickLine={false} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#06131D', borderColor: '#102B3B', borderRadius: '8px', color: '#EFFFFF' }}
+                  contentStyle={{ backgroundColor: '#06131D', borderColor: '#102B3B', borderRadius: '8px', color: '#EFFFFF', fontSize: '11px' }}
                 />
                 <Area type="monotone" dataKey="solar" stroke="#FFD12A" fill="url(#solGrad)" strokeWidth={2} name="Solar (kW)" />
                 <Area type="monotone" dataKey="wind" stroke="#299BD7" fill="url(#windGrad)" strokeWidth={2} name="Wind (kW)" />
@@ -257,25 +257,25 @@ export default function Dashboard() {
         </div>
 
         {/* Right Col: Live Energy Mix Donut + Diesel Tank Gauge */}
-        <div className="p-5 rounded-2xl bg-[#0B1D29] border border-[#102B3B] shadow-xl space-y-4 flex flex-col justify-between">
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#0B1D29] border border-[#102B3B] shadow-xl space-y-4 flex flex-col justify-between">
           <div>
-            <h3 className="text-sm font-extrabold text-[#EFFFFF] uppercase tracking-wider">
+            <h3 className="text-xs sm:text-sm font-extrabold text-[#EFFFFF] uppercase tracking-wider">
               REAL-TIME GENERATION MIX
             </h3>
-            <p className="text-xs text-[#89A7B7] mt-0.5">
+            <p className="text-[11px] sm:text-xs text-[#89A7B7] mt-0.5">
               Current source contribution breakdown
             </p>
           </div>
 
-          <div className="h-[180px] w-full relative flex items-center justify-center">
+          <div className="h-[170px] sm:h-[180px] w-full relative flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={energyMix}
                   cx="50%"
                   cy="50%"
-                  innerRadius={50}
-                  outerRadius={75}
+                  innerRadius={46}
+                  outerRadius={70}
                   paddingAngle={4}
                   dataKey="value"
                 >
@@ -284,13 +284,13 @@ export default function Dashboard() {
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#06131D', borderColor: '#102B3B', borderRadius: '8px', color: '#EFFFFF' }}
+                  contentStyle={{ backgroundColor: '#06131D', borderColor: '#102B3B', borderRadius: '8px', color: '#EFFFFF', fontSize: '11px' }}
                 />
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-lg font-mono font-black text-[#EFFFFF]">{totalRenewableKw + dieselKw} kW</span>
-              <span className="text-[9px] text-[#89A7B7] uppercase font-bold">Total Power</span>
+              <span className="text-base sm:text-lg font-mono font-black text-[#EFFFFF]">{totalRenewableKw + dieselKw} kW</span>
+              <span className="text-[8px] sm:text-[9px] text-[#89A7B7] uppercase font-bold">Total Power</span>
             </div>
           </div>
 
@@ -316,11 +316,11 @@ export default function Dashboard() {
       </div>
 
       {/* Live System Alerts List Synchronized */}
-      <div className="p-5 rounded-2xl bg-[#0B1D29] border border-[#102B3B] shadow-xl space-y-3">
+      <div className="p-4 sm:p-5 rounded-2xl bg-[#0B1D29] border border-[#102B3B] shadow-xl space-y-3">
         <div className="flex items-center justify-between pb-2 border-b border-[#102B3B]">
           <div className="flex items-center gap-2">
             <Activity className="w-4 h-4 text-[#48D5FF]" />
-            <h3 className="text-sm font-extrabold text-[#EFFFFF] uppercase tracking-wider">
+            <h3 className="text-xs sm:text-sm font-extrabold text-[#EFFFFF] uppercase tracking-wider">
               LIVE SYSTEM ALERTS & TELEMETRY LOGS
             </h3>
           </div>
@@ -328,7 +328,7 @@ export default function Dashboard() {
             onClick={() => navigate('/alerts')}
             className="text-xs font-bold text-[#48D5FF] hover:underline cursor-pointer"
           >
-            View All in Alerts & Anomalies →
+            View All →
           </button>
         </div>
 
@@ -336,7 +336,7 @@ export default function Dashboard() {
           {activeAlerts.map((alert) => (
             <div
               key={alert.id}
-              className={`p-3 rounded-xl border flex items-center justify-between transition-colors ${
+              className={`p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-colors ${
                 alert.severity === 'critical'
                   ? 'bg-[#FF6257]/15 border-[#FF6257]/40 text-[#FF6257]'
                   : alert.severity === 'warning'
@@ -344,13 +344,13 @@ export default function Dashboard() {
                   : 'bg-[#06131D] border-[#102B3B] text-[#EFFFFF]'
               }`}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-start sm:items-center gap-3">
                 {alert.severity === 'critical' ? (
-                  <AlertOctagon className="w-4 h-4 text-[#FF6257] flex-shrink-0" />
+                  <AlertOctagon className="w-4 h-4 text-[#FF6257] flex-shrink-0 mt-0.5 sm:mt-0" />
                 ) : alert.severity === 'warning' ? (
-                  <AlertTriangle className="w-4 h-4 text-[#FFD12A] flex-shrink-0" />
+                  <AlertTriangle className="w-4 h-4 text-[#FFD12A] flex-shrink-0 mt-0.5 sm:mt-0" />
                 ) : (
-                  <ShieldCheck className="w-4 h-4 text-[#35D47A] flex-shrink-0" />
+                  <ShieldCheck className="w-4 h-4 text-[#35D47A] flex-shrink-0 mt-0.5 sm:mt-0" />
                 )}
                 <div>
                   <span className="text-xs font-bold">{alert.title}</span>
@@ -358,7 +358,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="text-right">
+              <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 border-[#102B3B]/60 pt-1.5 sm:pt-0 pl-7 sm:pl-0">
                 <span className="font-mono text-xs font-bold">{alert.value}</span>
                 <p className="text-[10px] text-[#89A7B7]">{alert.timestamp}</p>
               </div>

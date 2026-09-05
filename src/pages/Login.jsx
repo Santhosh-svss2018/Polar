@@ -34,25 +34,25 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#06131D] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#06131D] flex flex-col items-center justify-center p-3 sm:p-4 relative overflow-hidden">
       {/* Background ambient lighting */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#48D5FF]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[400px] h-[400px] bg-[#299BD7]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-[#48D5FF]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-[200px] sm:w-[400px] h-[200px] sm:h-[400px] bg-[#299BD7]/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Main Login Card */}
-      <div className="w-full max-w-md p-8 relative z-10 rounded-2xl bg-[#0B1D29] border border-[#102B3B] shadow-2xl shadow-black/80">
+      <div className="w-full max-w-md p-5 sm:p-8 relative z-10 rounded-2xl bg-[#0B1D29] border border-[#102B3B] shadow-2xl shadow-black/80">
         {/* Brand Header */}
-        <div className="text-center mb-7">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#299BD7] to-[#48D5FF] shadow-lg shadow-[#48D5FF]/20 mb-4 text-black">
-            <Zap className="w-8 h-8 text-black fill-current" />
+        <div className="text-center mb-6 sm:mb-7">
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-[#299BD7] to-[#48D5FF] shadow-lg shadow-[#48D5FF]/20 mb-3 sm:mb-4 text-black">
+            <Zap className="w-7 h-7 sm:w-8 sm:h-8 text-black fill-current" />
           </div>
-          <h1 className="text-2xl font-black text-[#EFFFFF] tracking-wider">
+          <h1 className="text-xl sm:text-2xl font-black text-[#EFFFFF] tracking-wider">
             POLAR ENERGY <span className="text-[#48D5FF]">AI</span>
           </h1>
-          <p className="text-[11px] font-extrabold text-[#48D5FF] mt-1 uppercase tracking-widest">
+          <p className="text-[10px] sm:text-[11px] font-extrabold text-[#48D5FF] mt-1 uppercase tracking-widest">
             AUTONOMOUS MICROGRID CONTROL SYSTEM
           </p>
-          <p className="text-xs text-[#89A7B7] mt-1">
+          <p className="text-[11px] sm:text-xs text-[#89A7B7] mt-1">
             Remote Energy System • Live Digital Twin
           </p>
         </div>

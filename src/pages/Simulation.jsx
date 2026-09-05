@@ -63,20 +63,20 @@ function Switch({ checked, onChange, danger = false }) {
 function ComponentControl({ type, title, icon: Icon, tone, component, onToggle, onKwChange, unit = 'kW' }) {
   const pct = Math.round((component.kw / component.max) * 100);
   return (
-    <div className={`sim-control sim-control-${tone} ${!component.enabled ? 'is-disabled' : ''}`}>
+    <div className={`sim-control sim-control-${tone} ${!component.enabled ? 'is-disabled' : ''} flex flex-col justify-between`}>
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="sim-control-icon"><Icon className="w-4 h-4" /></div>
+          <div className="sim-control-icon flex-shrink-0"><Icon className="w-4 h-4" /></div>
           <div className="min-w-0">
             <p className="text-xs font-extrabold text-white truncate">{title}</p>
-            <p className="text-[10px] text-slate-500">{component.enabled ? `${component.kw} ${unit} active` : 'Offline'}</p>
+            <p className="text-[10px] text-slate-400">{component.enabled ? `${component.kw} ${unit} active` : 'Offline'}</p>
           </div>
         </div>
         <Switch checked={component.enabled} onChange={onToggle} danger={type === 'diesel'} />
       </div>
       <div className="mt-3">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] uppercase tracking-wider text-slate-500">Output capacity</span>
+          <span className="text-[10px] uppercase tracking-wider text-slate-400">Output capacity</span>
           <span className="font-mono text-xs font-bold text-slate-200">{component.kw} <span className="text-slate-500">/ {component.max} kW</span></span>
         </div>
         <input
@@ -87,9 +87,9 @@ function ComponentControl({ type, title, icon: Icon, tone, component, onToggle, 
           step="1"
           value={component.kw}
           onChange={(e) => onKwChange(Number(e.target.value))}
-          className={`sim-range sim-range-${tone}`}
+          className={`sim-range sim-range-${tone} w-full`}
         />
-        <div className="h-1 rounded-full bg-[#081127] overflow-hidden mt-2">
+        <div className="h-1.5 rounded-full bg-[#081127] overflow-hidden mt-2">
           <div className="h-full rounded-full sim-progress" style={{ width: `${pct}%` }} />
         </div>
       </div>
@@ -375,18 +375,18 @@ export default function Simulation() {
         <div className="condition-number"><span>Reserve</span><b>{simResults.reserve}%</b></div>
       </div>
 
-      <div className="sim-page-header">
+      <div className="sim-page-header flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 pb-3 border-b border-[#1C2F57]">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-xl sm:text-2xl font-black tracking-wide text-white">LIVE STATION SIMULATION</h2>
+            <h2 className="text-lg sm:text-2xl font-black tracking-wide text-white">LIVE STATION SIMULATION</h2>
             <span className="sim-live-badge"><span /> LIVE AI MODEL</span>
           </div>
           <p className="text-xs text-slate-400 mt-1">Interactive energy-flow simulation for <span className="text-cyan-300 font-semibold">{station}</span>. Toggle assets and change their kW output to see demand forecasts update immediately.</p>
         </div>
-        <div className="flex items-center gap-2.5">
-          <button onClick={handleReset} className="sim-action-btn"><RotateCcw className="w-3.5 h-3.5" /> Reset</button>
-          <button onClick={handleStop} className="sim-stop-btn" disabled={!running}><span className="sim-stop-dot" /> STOP</button>
-          <button onClick={handleRun} className="sim-run-btn"><Play className={`w-3.5 h-3.5 fill-current ${running ? 'animate-pulse' : ''}`} /> {running ? 'SIMULATION RUNNING' : 'RUN AI SIMULATION'}</button>
+        <div className="grid grid-cols-3 sm:flex items-center gap-2 w-full sm:w-auto">
+          <button onClick={handleReset} className="sim-action-btn justify-center"><RotateCcw className="w-3.5 h-3.5" /> Reset</button>
+          <button onClick={handleStop} className="sim-stop-btn justify-center" disabled={!running}><span className="sim-stop-dot" /> STOP</button>
+          <button onClick={handleRun} className="sim-run-btn justify-center col-span-1 sm:col-auto whitespace-nowrap"><Play className={`w-3.5 h-3.5 fill-current ${running ? 'animate-pulse' : ''}`} /> <span className="hidden sm:inline">{running ? 'SIMULATION RUNNING' : 'RUN AI SIMULATION'}</span><span className="sm:hidden">{running ? 'RUNNING' : 'RUN AI'}</span></button>
         </div>
       </div>
 
@@ -395,7 +395,7 @@ export default function Simulation() {
           <div className="sim-scene-top">
             <div>
               <p className="sim-kicker">ENERGY MICROGRID / 3D VIEW</p>
-              <h3 className="text-base font-black text-white mt-0.5">{station}</h3>
+              <h3 className="text-sm sm:text-base font-black text-white mt-0.5">{station}</h3>
             </div>
             <div className={`sim-condition-pill ${critical ? 'critical' : simResults.risk === 'HIGH' ? 'high' : ''}`}>
               <span /> {simResults.risk === 'STABLE' ? 'NORMAL' : simResults.risk}
@@ -422,10 +422,10 @@ export default function Simulation() {
           </div>
 
           <div className="sim-flow-strip">
-            <div><Sun className="text-cyan-300 w-4 h-4" /><span>Solar</span><b>{simResults.weather.label === 'Clear' ? simResults.renewable : Math.round((components.solar.enabled ? components.solar.kw * simResults.weather.solar : 0))} kW</b></div>
-            <div><Wind className="text-blue-300 w-4 h-4" /><span>Wind</span><b>{Math.round(components.wind.enabled ? components.wind.kw * simResults.weather.wind : 0)} kW</b></div>
-            <div><Battery className="text-emerald-300 w-4 h-4" /><span>Battery</span><b>{simResults.battery} kW</b></div>
-            <div><Fuel className="text-amber-300 w-4 h-4" /><span>Diesel</span><b>{simResults.diesel} kW</b></div>
+            <div><Sun className="text-cyan-300 w-4 h-4 flex-shrink-0" /><span>Solar</span><b>{simResults.weather.label === 'Clear' ? simResults.renewable : Math.round((components.solar.enabled ? components.solar.kw * simResults.weather.solar : 0))} kW</b></div>
+            <div><Wind className="text-blue-300 w-4 h-4 flex-shrink-0" /><span>Wind</span><b>{Math.round(components.wind.enabled ? components.wind.kw * simResults.weather.wind : 0)} kW</b></div>
+            <div><Battery className="text-emerald-300 w-4 h-4 flex-shrink-0" /><span>Battery</span><b>{simResults.battery} kW</b></div>
+            <div><Fuel className="text-amber-300 w-4 h-4 flex-shrink-0" /><span>Diesel</span><b>{simResults.diesel} kW</b></div>
           </div>
         </section>
 
@@ -433,7 +433,7 @@ export default function Simulation() {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="sim-kicker">AI FORECAST ENGINE</p>
-              <h3 className="text-base font-black text-white mt-0.5">Current & Future Demand</h3>
+              <h3 className="text-sm sm:text-base font-black text-white mt-0.5">Current & Future Demand</h3>
             </div>
             <div className="forecast-pulse"><Activity className="w-4 h-4" /></div>
           </div>
@@ -446,10 +446,10 @@ export default function Simulation() {
 
           <div className="h-60 mt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={simResults.points} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+              <LineChart data={simResults.points} margin={{ top: 8, right: 8, left: -22, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1C2F57" vertical={false} />
-                <XAxis dataKey="time" stroke="#64748B" tick={{ fill: '#94A3B8', fontSize: 9 }} />
-                <YAxis stroke="#64748B" tick={{ fill: '#94A3B8', fontSize: 9 }} unit="kW" />
+                <XAxis dataKey="time" stroke="#64748B" tick={{ fill: '#94A3B8', fontSize: 9 }} tickLine={false} />
+                <YAxis stroke="#64748B" tick={{ fill: '#94A3B8', fontSize: 9 }} unit="kW" tickLine={false} />
                 <Tooltip contentStyle={{ backgroundColor: '#0B1630', borderColor: '#24406F', borderRadius: 10, color: '#fff', fontSize: 11 }} />
                 <Legend wrapperStyle={{ fontSize: 10, paddingTop: 8 }} />
                 <Line type="monotone" dataKey="current_demand" name="Current demand" stroke="#FFB300" strokeWidth={2.5} dot={false} isAnimationActive animationDuration={450} />
@@ -463,12 +463,16 @@ export default function Simulation() {
       </div>
 
       <div className="sim-controls-layout">
+        {/* COMPONENT GENERATION & STORAGE CONTROLS */}
         <section className="polar-card sim-controls-card">
-          <div className="sim-section-heading">
-            <div><p className="sim-kicker">COMPONENT CONTROL</p><h3 className="text-base font-black text-white">Generation & Storage Controls</h3></div>
-            <span className="text-[10px] text-slate-500 uppercase tracking-wider">Toggle + kW slider</span>
+          <div className="sim-section-heading pb-2 border-b border-[#1C2F57]/80 flex items-center justify-between">
+            <div>
+              <p className="sim-kicker">COMPONENT CONTROL</p>
+              <h3 className="text-sm sm:text-base font-black text-white">Generation & Storage Controls</h3>
+            </div>
+            <span className="text-[10px] text-slate-500 uppercase tracking-wider hidden sm:inline">Toggle + kW slider</span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
             <ComponentControl type="solar" title="Solar Array" icon={Sun} tone="cyan" component={components.solar} onToggle={() => updateComponent('solar', { enabled: !components.solar.enabled })} onKwChange={(kw) => updateComponent('solar', { kw })} />
             <ComponentControl type="wind" title="Wind Turbine" icon={Wind} tone="blue" component={components.wind} onToggle={() => updateComponent('wind', { enabled: !components.wind.enabled })} onKwChange={(kw) => updateComponent('wind', { kw })} />
             <ComponentControl type="battery" title="Battery Storage" icon={Battery} tone="green" component={components.battery} onToggle={() => updateComponent('battery', { enabled: !components.battery.enabled })} onKwChange={(kw) => updateComponent('battery', { kw })} />
@@ -476,38 +480,61 @@ export default function Simulation() {
           </div>
         </section>
 
+        {/* ENVIRONMENT & WEATHER CONTROLS */}
         <aside className="polar-card sim-side-controls">
-          <div className="sim-section-heading"><div><p className="sim-kicker">ENVIRONMENT</p><h3 className="text-base font-black text-white">Weather Condition</h3></div><Thermometer className="w-4 h-4 text-cyan-300" /></div>
-          <div className="weather-column">
+          <div className="sim-section-heading pb-2 border-b border-[#1C2F57]/80 flex items-center justify-between">
+            <div>
+              <p className="sim-kicker">ENVIRONMENT</p>
+              <h3 className="text-sm sm:text-base font-black text-white">Weather Condition</h3>
+            </div>
+            <Thermometer className="w-4 h-4 text-cyan-300 flex-shrink-0" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2.5 mt-3">
             {Object.entries(WEATHER).map(([key, value]) => (
               <button key={key} onClick={() => handleWeather(key)} className={`weather-option ${weather === key ? 'selected' : ''}`}>
-                <span className="weather-emoji">{value.icon}</span><span><b>{value.label}</b><small>{value.temp}°C · solar ×{value.solar.toFixed(2)}</small></span><span className="weather-radio" />
+                <span className="weather-emoji text-xl flex-shrink-0">{value.icon}</span>
+                <div className="min-w-0 text-left flex-1">
+                  <p className="text-xs font-bold text-white leading-tight">{value.label}</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5 font-mono">{value.temp}°C · solar ×{value.solar.toFixed(2)}</p>
+                </div>
+                <span className="weather-radio flex-shrink-0" />
               </button>
             ))}
           </div>
-          <div className="speed-box">
-            <div className="flex items-center justify-between mb-2"><span className="sim-kicker">SIMULATION SPEED</span><Gauge className="w-3.5 h-3.5 text-cyan-300" /></div>
-            <div className="speed-buttons">{[1, 2, 3, 4].map((v) => <button key={v} onClick={() => setSpeed(v)} className={speed === v ? 'active' : ''}>{v}x</button>)}</div>
+          <div className="speed-box mt-4 pt-3 border-t border-[#1c2f57]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="sim-kicker">SIMULATION SPEED</span>
+              <Gauge className="w-3.5 h-3.5 text-cyan-300" />
+            </div>
+            <div className="speed-buttons grid grid-cols-4 gap-2">
+              {[1, 2, 3, 4].map((v) => (
+                <button key={v} onClick={() => setSpeed(v)} className={`py-2 rounded-lg text-xs font-bold font-mono transition-all cursor-pointer ${speed === v ? 'active' : ''}`}>{v}x</button>
+              ))}
+            </div>
           </div>
         </aside>
       </div>
 
       <section className="ai-optimize-card polar-card">
-        <div className="ai-optimize-header">
-          <div className="ai-orb"><Sparkles className="w-5 h-5" /></div>
-          <div className="flex-1"><p className="sim-kicker text-cyan-300">AI OPTIMISE</p><h3 className="text-lg font-black text-white">Best Energy Use Strategy for the Next 24 Hours</h3><p className="text-xs text-slate-400 mt-1">AI balances renewable generation, battery reserve and critical station demand to minimize diesel use.</p></div>
-          <div className="ai-score"><span>AI efficiency</span><b>{clamp(Math.round(100 - simResults.deficit * 1.8 + simResults.renewable * 0.25), 54, 98)}%</b></div>
+        <div className="ai-optimize-header flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="flex items-center gap-3">
+            <div className="ai-orb"><Sparkles className="w-5 h-5" /></div>
+            <div><p className="sim-kicker text-cyan-300">AI OPTIMISE</p><h3 className="text-base sm:text-lg font-black text-white">Best Energy Strategy (24h)</h3></div>
+          </div>
+          <p className="text-xs text-slate-400 sm:flex-1">AI balances renewable generation, battery reserve and critical station demand to minimize diesel use.</p>
+          <div className="ai-score self-end sm:self-auto"><span>AI efficiency</span><b>{clamp(Math.round(100 - simResults.deficit * 1.8 + simResults.renewable * 0.25), 54, 98)}%</b></div>
         </div>
-        <div className="ai-advice-grid">
-          {optimizeAdvice.map((item, index) => { const Icon = item.icon; return <div className="ai-advice" key={item.title}><div className="ai-advice-number">0{index + 1}</div><Icon className="w-4 h-4 text-cyan-300 mt-0.5" /><div><b>{item.title}</b><p>{item.text}</p></div></div>; })}
+        <div className="ai-advice-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 my-3">
+          {optimizeAdvice.map((item, index) => { const Icon = item.icon; return <div className="ai-advice" key={item.title}><div className="ai-advice-number">0{index + 1}</div><Icon className="w-4 h-4 text-cyan-300 mt-0.5 flex-shrink-0" /><div><b>{item.title}</b><p>{item.text}</p></div></div>; })}
         </div>
-        <div className="ai-defense-bar">
-          <div><ShieldCheck className="w-4 h-4 text-emerald-300" /><span>Critical-load protection</span><b>{simResults.deficit === 0 ? 'SECURED' : 'AI PRIORITY ACTIVE'}</b></div>
-          <div><Leaf className="w-4 h-4 text-emerald-300" /><span>Renewable utilization</span><b>{clamp(Math.round((simResults.renewable / Math.max(1, simResults.demand)) * 100), 0, 100)}%</b></div>
-          <div><Fuel className="w-4 h-4 text-amber-300" /><span>Diesel dependency</span><b>{components.diesel.enabled ? 'AVAILABLE / LAST RESORT' : 'OFF'}</b></div>
+        <div className="ai-defense-bar grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div><ShieldCheck className="w-4 h-4 text-emerald-300 flex-shrink-0" /><span>Critical-load protection</span><b>{simResults.deficit === 0 ? 'SECURED' : 'AI PRIORITY ACTIVE'}</b></div>
+          <div><Leaf className="w-4 h-4 text-emerald-300 flex-shrink-0" /><span>Renewable utilization</span><b>{clamp(Math.round((simResults.renewable / Math.max(1, simResults.demand)) * 100), 0, 100)}%</b></div>
+          <div><Fuel className="w-4 h-4 text-amber-300 flex-shrink-0" /><span>Diesel dependency</span><b>{components.diesel.enabled ? 'AVAILABLE / LAST RESORT' : 'OFF'}</b></div>
         </div>
       </section>
 
     </div>
   );
 }
+

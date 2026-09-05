@@ -137,49 +137,49 @@ export default function Prediction() {
       </div>
 
       {/* Model Performance Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="polar-card p-4 border border-cyan-500/30">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="polar-card p-3.5 sm:p-4 border border-cyan-500/30">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400">Confidence Score</span>
+            <span className="text-[10px] sm:text-xs text-slate-400">Confidence Score</span>
             <Sparkles className="w-4 h-4 text-cyan-400" />
           </div>
-          <p className="text-2xl font-black text-white font-mono mt-1">
+          <p className="text-xl sm:text-2xl font-black text-white font-mono mt-1">
             {p.model_info.confidence_score}%
           </p>
-          <p className="text-[10px] text-emerald-400 mt-1">High Reliability Grade</p>
+          <p className="text-[10px] text-emerald-400 mt-1">High Reliability</p>
         </div>
 
-        <div className="polar-card p-4 border border-blue-500/30">
+        <div className="polar-card p-3.5 sm:p-4 border border-blue-500/30">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400">Model Accuracy (R²)</span>
+            <span className="text-[10px] sm:text-xs text-slate-400">Accuracy (R²)</span>
             <CheckCircle2 className="w-4 h-4 text-blue-400" />
           </div>
-          <p className="text-2xl font-black text-white font-mono mt-1">
+          <p className="text-xl sm:text-2xl font-black text-white font-mono mt-1">
             {p.model_info.r2_score}
           </p>
-          <p className="text-[10px] text-blue-300 mt-1">Trained on 720 Hourly Points</p>
+          <p className="text-[10px] text-blue-300 mt-1">720 Hourly Points</p>
         </div>
 
-        <div className="polar-card p-4 border border-slate-700">
+        <div className="polar-card p-3.5 sm:p-4 border border-slate-700">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400">Mean Abs. Error (MAE)</span>
+            <span className="text-[10px] sm:text-xs text-slate-400">MAE Error</span>
             <Activity className="w-4 h-4 text-amber-400" />
           </div>
-          <p className="text-2xl font-black text-white font-mono mt-1">
+          <p className="text-xl sm:text-2xl font-black text-white font-mono mt-1">
             ±{p.model_info.mae_kw} <span className="text-xs font-normal text-slate-400">kW</span>
           </p>
-          <p className="text-[10px] text-slate-400 mt-1">Low Variance in Polar Subzero</p>
+          <p className="text-[10px] text-slate-400 mt-1">Low Subzero Variance</p>
         </div>
 
-        <div className="polar-card p-4 border border-emerald-500/30">
+        <div className="polar-card p-3.5 sm:p-4 border border-emerald-500/30">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400">Model Architecture</span>
+            <span className="text-[10px] sm:text-xs text-slate-400">Model Engine</span>
             <Layers className="w-4 h-4 text-emerald-400" />
           </div>
-          <p className="text-sm font-bold text-slate-200 mt-1">
-            Random Forest Regressor
+          <p className="text-xs sm:text-sm font-bold text-slate-200 mt-1 truncate">
+            Random Forest
           </p>
-          <p className="text-[10px] text-slate-400 mt-1">Scikit-learn v1.5 / Python 3.13</p>
+          <p className="text-[10px] text-slate-400 mt-1">Scikit-learn v1.5</p>
         </div>
       </div>
 
@@ -188,81 +188,81 @@ export default function Prediction() {
         <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
           Demand Forecast by Horizon
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div className="p-3 rounded-lg bg-[#0E1A38] border border-[#1C2F57]">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+          <div className="p-2.5 sm:p-3 rounded-lg bg-[#0E1A38] border border-[#1C2F57]">
             <p className="text-[10px] text-slate-400 uppercase">Now</p>
-            <p className="text-xl font-bold font-mono text-white mt-0.5">{p.horizons.now.kw} kW</p>
-            <p className="text-[10px] text-emerald-400 mt-1">{p.horizons.now.confidence}% conf</p>
+            <p className="text-lg sm:text-xl font-bold font-mono text-white mt-0.5">{p.horizons.now.kw} kW</p>
+            <p className="text-[10px] text-emerald-400 mt-0.5">{p.horizons.now.confidence}% conf</p>
           </div>
-          <div className="p-3 rounded-lg bg-[#0E1A38] border border-cyan-500/30">
+          <div className="p-2.5 sm:p-3 rounded-lg bg-[#0E1A38] border border-cyan-500/30">
             <p className="text-[10px] text-cyan-300 uppercase">+1 Hour</p>
-            <p className="text-xl font-bold font-mono text-cyan-300 mt-0.5">{p.horizons.plus_1h.kw} kW</p>
-            <p className="text-[10px] text-cyan-400 mt-1">{p.horizons.plus_1h.confidence}% conf</p>
+            <p className="text-lg sm:text-xl font-bold font-mono text-cyan-300 mt-0.5">{p.horizons.plus_1h.kw} kW</p>
+            <p className="text-[10px] text-cyan-400 mt-0.5">{p.horizons.plus_1h.confidence}% conf</p>
           </div>
-          <div className="p-3 rounded-lg bg-[#0E1A38] border border-blue-500/30">
+          <div className="p-2.5 sm:p-3 rounded-lg bg-[#0E1A38] border border-blue-500/30">
             <p className="text-[10px] text-blue-300 uppercase">+3 Hours</p>
-            <p className="text-xl font-bold font-mono text-blue-300 mt-0.5">{p.horizons.plus_3h.kw} kW</p>
-            <p className="text-[10px] text-blue-400 mt-1">{p.horizons.plus_3h.confidence}% conf</p>
+            <p className="text-lg sm:text-xl font-bold font-mono text-blue-300 mt-0.5">{p.horizons.plus_3h.kw} kW</p>
+            <p className="text-[10px] text-blue-400 mt-0.5">{p.horizons.plus_3h.confidence}% conf</p>
           </div>
-          <div className="p-3 rounded-lg bg-[#15234A] border border-amber-500/50 shadow-md shadow-amber-500/5">
-            <p className="text-[10px] text-amber-300 uppercase font-bold">+6 Hours (Peak)</p>
-            <p className="text-xl font-bold font-mono text-amber-400 mt-0.5">{p.horizons.plus_6h.kw} kW</p>
-            <p className="text-[10px] text-amber-300 mt-1">{p.horizons.plus_6h.confidence}% conf</p>
+          <div className="p-2.5 sm:p-3 rounded-lg bg-[#15234A] border border-amber-500/50 shadow-md shadow-amber-500/5">
+            <p className="text-[10px] text-amber-300 uppercase font-bold">+6h (Peak)</p>
+            <p className="text-lg sm:text-xl font-bold font-mono text-amber-400 mt-0.5">{p.horizons.plus_6h.kw} kW</p>
+            <p className="text-[10px] text-amber-300 mt-0.5">{p.horizons.plus_6h.confidence}% conf</p>
           </div>
-          <div className="p-3 rounded-lg bg-[#0E1A38] border border-[#1C2F57]">
+          <div className="p-2.5 sm:p-3 rounded-lg bg-[#0E1A38] border border-[#1C2F57]">
             <p className="text-[10px] text-slate-400 uppercase">+12 Hours</p>
-            <p className="text-xl font-bold font-mono text-slate-200 mt-0.5">{p.horizons.plus_12h.kw} kW</p>
-            <p className="text-[10px] text-slate-400 mt-1">{p.horizons.plus_12h.confidence}% conf</p>
+            <p className="text-lg sm:text-xl font-bold font-mono text-slate-200 mt-0.5">{p.horizons.plus_12h.kw} kW</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">{p.horizons.plus_12h.confidence}% conf</p>
           </div>
-          <div className="p-3 rounded-lg bg-[#0E1A38] border border-[#1C2F57]">
+          <div className="p-2.5 sm:p-3 rounded-lg bg-[#0E1A38] border border-[#1C2F57]">
             <p className="text-[10px] text-slate-400 uppercase">+24 Hours</p>
-            <p className="text-xl font-bold font-mono text-slate-200 mt-0.5">{p.horizons.plus_24h.kw} kW</p>
-            <p className="text-[10px] text-slate-400 mt-1">{p.horizons.plus_24h.confidence}% conf</p>
+            <p className="text-lg sm:text-xl font-bold font-mono text-slate-200 mt-0.5">{p.horizons.plus_24h.kw} kW</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">{p.horizons.plus_24h.confidence}% conf</p>
           </div>
         </div>
       </div>
 
-      {/* Tabs for Forecast Types */}
-      <div className="flex items-center gap-2 border-b border-[#1C2F57] pb-2">
+      {/* Swipeable Tabs for Forecast Types */}
+      <div className="flex items-center gap-2 border-b border-[#1C2F57] pb-2 overflow-x-auto no-scrollbar flex-nowrap">
         <button
           onClick={() => setActiveTab('load')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap flex-shrink-0 cursor-pointer ${
             activeTab === 'load'
               ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
               : 'text-slate-400 hover:text-white hover:bg-[#121E3E]'
           }`}
         >
           <Activity className="w-4 h-4 text-amber-400" />
-          <span>Station Load Demand Prediction</span>
+          <span>Load Demand Forecast</span>
         </button>
 
         <button
           onClick={() => setActiveTab('solar')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap flex-shrink-0 cursor-pointer ${
             activeTab === 'solar'
               ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
               : 'text-slate-400 hover:text-white hover:bg-[#121E3E]'
           }`}
         >
           <Sun className="w-4 h-4 text-cyan-400" />
-          <span>Solar Generation Forecast</span>
+          <span>Solar Generation</span>
         </button>
 
         <button
           onClick={() => setActiveTab('wind')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap flex-shrink-0 cursor-pointer ${
             activeTab === 'wind'
               ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
               : 'text-slate-400 hover:text-white hover:bg-[#121E3E]'
           }`}
         >
           <Wind className="w-4 h-4 text-blue-400" />
-          <span>Wind Generation Forecast</span>
+          <span>Wind Generation</span>
         </button>
 
         <button
           onClick={() => setActiveTab('combined')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap flex-shrink-0 cursor-pointer ${
             activeTab === 'combined'
               ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
               : 'text-slate-400 hover:text-white hover:bg-[#121E3E]'
@@ -274,11 +274,11 @@ export default function Prediction() {
       </div>
 
       {/* Main Prediction Chart */}
-      <div className="polar-card p-5">
-        <div className="h-80 w-full">
+      <div className="polar-card p-4 sm:p-5">
+        <div className="h-64 sm:h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
             {activeTab === 'load' && (
-              <AreaChart data={p.forecast_timeline}>
+              <AreaChart data={p.forecast_timeline} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
                 <defs>
                   <linearGradient id="loadPredGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#FFB300" stopOpacity={0.4} />
