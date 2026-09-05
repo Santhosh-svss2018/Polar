@@ -31,8 +31,10 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
             detail="This operator account is currently disabled. Contact the administrator."
         )
     
-    # 4. Update last_login
-    user.last_login = datetime.now(timezone.utc)
+    # 4. Update last_login & last_seen
+    now_utc = datetime.now(timezone.utc)
+    user.last_login = now_utc
+    user.last_seen = now_utc
     if req.station:
         user.station = req.station
     db.commit()
@@ -47,6 +49,9 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
     }
     access_token = create_access_token(token_payload)
     
+    user_resp = UserResponse.from_orm(user) if hasattr(UserResponse, "from_orm") else UserResponse.model_validate(user)
+    user_resp.is_online = True
+    
     return LoginResponse(
         token=access_token,
         token_type="Bearer",
@@ -55,7 +60,7 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
         station=user.station,
         role=user.role,
         status=user.status,
-        user=UserResponse.from_orm(user) if hasattr(UserResponse, "from_orm") else UserResponse.model_validate(user)
+        user=user_resp
     )
 
 @router.get("/me", response_model=UserResponse)
@@ -63,7 +68,43 @@ def get_current_user_profile(current_user: User = Depends(get_current_user)):
     """Return the authenticated user's profile."""
     return current_user
 
+@router.post("/heartbeat")
+def heartbeat(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update operator live presence timestamp. Returns account status."""
+    if current_user.status != "active":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your operator account has been disabled by the administrator."
+        )
+    current_user.last_seen = datetime.now(timezone.utc)
+    db.commit()
+    return {
+        "status": "online",
+        "username": current_user.username,
+        "role": current_user.role,
+        "account_status": current_user.status,
+        "last_seen": current_user.last_seen.isoformat()
+    }
+
+@router.post("/leave")
+def leave(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Mark operator as offline on window close or navigation away."""
+    current_user.last_seen = None
+    db.commit()
+    return {"status": "offline", "username": current_user.username}
+
 @router.post("/logout")
-def logout(current_user: User = Depends(get_current_user)):
-    """Acknowledge logout on backend."""
+def logout(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Acknowledge logout on backend and set offline."""
+    current_user.last_seen = None
+    db.commit()
     return {"message": "Logged out successfully", "username": current_user.username}

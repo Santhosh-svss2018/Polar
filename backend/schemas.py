@@ -18,6 +18,8 @@ class UserResponse(BaseModel):
     station: Optional[str] = "Bharati Polar Station"
     created_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
+    last_seen: Optional[datetime] = None
+    is_online: Optional[bool] = False
 
     class Config:
         from_attributes = True

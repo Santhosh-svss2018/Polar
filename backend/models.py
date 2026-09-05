@@ -15,6 +15,7 @@ class User(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     last_login = Column(DateTime, nullable=True)
+    last_seen = Column(DateTime, nullable=True)
 
 
 class Station(Base):

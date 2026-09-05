@@ -20,9 +20,22 @@ def list_operators(
     db: Session = Depends(get_db),
     admin_user: User = Depends(require_admin)
 ):
-    """List all operators and system accounts (Admin Only)."""
+    """List all operators and system accounts with live online presence status (Admin Only)."""
     users = db.query(User).order_by(User.id.asc()).all()
-    return users
+    now_utc = datetime.now(timezone.utc)
+    
+    result = []
+    for u in users:
+        u_resp = UserResponse.from_orm(u) if hasattr(UserResponse, "from_orm") else UserResponse.model_validate(u)
+        # Determine if online (active within past 60 seconds)
+        if u.last_seen:
+            last_seen_aware = u.last_seen if u.last_seen.tzinfo else u.last_seen.replace(tzinfo=timezone.utc)
+            u_resp.is_online = (now_utc - last_seen_aware).total_seconds() < 60
+        else:
+            u_resp.is_online = False
+        result.append(u_resp)
+        
+    return result
 
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_operator(

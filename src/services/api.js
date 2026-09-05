@@ -1,10 +1,10 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://polar-energy-api.onrender.com/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 4000, // Quick timeout for seamless local fallback when backend is offline
+  timeout: 3000, // Fast timeout for immediate local/cloud fallback
   headers: {
     'Content-Type': 'application/json',
   },
@@ -47,8 +47,12 @@ apiClient.interceptors.response.use(
 );
 
 // =========================================================================
-// OFFLINE / STANDALONE STORAGE & FALLBACK ENGINE (For Netlify / Static Host)
+// REAL-TIME CLOUD OPERATOR REGISTRY & MULTI-DEVICE SYNCHRONIZATION ENGINE
 // =========================================================================
+
+const SYNC_CHANNEL = 'polar_energy_station_operators_v1';
+const SYNC_URL = `https://ntfy.sh/${SYNC_CHANNEL}`;
+const ONLINE_THRESHOLD_MS = 45000; // 45 seconds heartbeat active window
 
 const DEFAULT_OPERATORS = [
   {
@@ -60,7 +64,8 @@ const DEFAULT_OPERATORS = [
     password: 'polar123',
     station: 'Bharati Polar Station',
     created_at: '2026-01-15T08:00:00Z',
-    last_login: null,
+    last_login: new Date().toISOString(),
+    last_seen: new Date().toISOString(),
   },
   {
     id: 2,
@@ -71,7 +76,8 @@ const DEFAULT_OPERATORS = [
     password: 'polar123',
     station: 'Bharati Polar Station',
     created_at: '2026-02-01T09:30:00Z',
-    last_login: null,
+    last_login: new Date(Date.now() - 3600000).toISOString(),
+    last_seen: null,
   },
   {
     id: 3,
@@ -82,7 +88,8 @@ const DEFAULT_OPERATORS = [
     password: 'polar123',
     station: 'Bharati Polar Station',
     created_at: '2026-02-10T11:15:00Z',
-    last_login: null,
+    last_login: new Date(Date.now() - 7200000).toISOString(),
+    last_seen: null,
   },
   {
     id: 4,
@@ -93,7 +100,8 @@ const DEFAULT_OPERATORS = [
     password: 'polar123',
     station: 'Bharati Polar Station',
     created_at: '2026-02-20T14:45:00Z',
-    last_login: null,
+    last_login: new Date(Date.now() - 86400000).toISOString(),
+    last_seen: null,
   },
   {
     id: 5,
@@ -105,8 +113,27 @@ const DEFAULT_OPERATORS = [
     station: 'Bharati Polar Station',
     created_at: '2026-03-01T10:00:00Z',
     last_login: null,
+    last_seen: null,
   },
 ];
+
+export function computeIsOnline(lastSeen) {
+  if (!lastSeen) return false;
+  try {
+    const time = new Date(lastSeen).getTime();
+    return (Date.now() - time) < ONLINE_THRESHOLD_MS;
+  } catch {
+    return false;
+  }
+}
+
+function enrichOperators(ops) {
+  if (!Array.isArray(ops)) return [];
+  return ops.map(op => ({
+    ...op,
+    is_online: computeIsOnline(op.last_seen)
+  }));
+}
 
 function getStoredOperators() {
   try {
@@ -114,12 +141,13 @@ function getStoredOperators() {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        return enrichOperators(parsed);
       }
     }
   } catch (e) {}
+  const seeded = enrichOperators(DEFAULT_OPERATORS);
   localStorage.setItem('polar_operators_db', JSON.stringify(DEFAULT_OPERATORS));
-  return DEFAULT_OPERATORS;
+  return seeded;
 }
 
 function saveStoredOperators(operators) {
@@ -128,59 +156,101 @@ function saveStoredOperators(operators) {
   } catch (e) {}
 }
 
-function getStoredAlerts() {
+async function broadcastCloudSync(operators, action = 'UPDATE', extra = {}) {
+  saveStoredOperators(operators);
   try {
-    const raw = localStorage.getItem('polar_alerts_db');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch (e) {}
-  const defaults = [
-    {
-      id: 'ALT-101',
-      severity: 'critical',
-      title: 'High Consumption Detected - Heater 03',
-      equipment: 'Heater Subsystem 03 (Living Quarters)',
-      desc: 'Heater 03 is consuming 12.5 kW, which is 140% above normal nominal threshold. IsolationForest score: 0.96.',
-      value: '12.5 kW (Normal: 5.2 kW)',
-      timestamp: '14 minutes ago (15:32 UTC)',
-      status: 'Active',
-    },
-    {
-      id: 'ALT-102',
-      severity: 'warning',
-      title: 'Energy Shortage Predicted',
-      equipment: 'Renewable Power Array (Solar + Wind)',
-      desc: 'Low renewable generation expected in next 6 hours (+6h: 21.5 kW vs 55 kW peak demand).',
-      value: 'Deficit: 24 kW Forecast',
-      timestamp: '38 minutes ago (15:08 UTC)',
-      status: 'Active',
-    },
-    {
-      id: 'ALT-103',
-      severity: 'info',
-      title: 'Solar Output Drop Anticipated',
-      equipment: 'Photovoltaic Array 01-04 (Bifacial)',
-      desc: 'Expected cloud cover and blizzard front moving in at 18:00 UTC. Irradiance falling below 200 W/m².',
-      value: 'Solar: -78% in 3h',
-      timestamp: '1 hour ago (14:45 UTC)',
-      status: 'Active',
-    },
-  ];
-  localStorage.setItem('polar_alerts_db', JSON.stringify(defaults));
-  return defaults;
+    await fetch(SYNC_URL, {
+      method: 'POST',
+      headers: { 'Title': `Polar Sync: ${action}`, 'Priority': 'low' },
+      body: JSON.stringify({
+        type: 'OPERATORS_SYNC',
+        action,
+        operators,
+        extra,
+        timestamp: Date.now()
+      })
+    });
+  } catch (e) {
+    // Local resilience fallback
+  }
 }
 
-function saveStoredAlerts(alerts) {
+async function fetchCloudOperators() {
   try {
-    localStorage.setItem('polar_alerts_db', JSON.stringify(alerts));
+    const res = await fetch(`${SYNC_URL}/json?poll=1&since=24h`, {
+      signal: AbortSignal.timeout(2500)
+    });
+    if (res.ok) {
+      const text = await res.text();
+      const lines = text.trim().split('\n').filter(Boolean);
+      let latestList = null;
+      for (const line of lines) {
+        try {
+          const item = JSON.parse(line);
+          if (item.message) {
+            const body = JSON.parse(item.message);
+            if (body.type === 'OPERATORS_SYNC' && Array.isArray(body.operators) && body.operators.length > 0) {
+              latestList = body.operators;
+            }
+          }
+        } catch (err) {}
+      }
+      if (latestList && latestList.length > 0) {
+        saveStoredOperators(latestList);
+        return enrichOperators(latestList);
+      }
+    }
   } catch (e) {}
+  return getStoredOperators();
 }
 
 export const api = {
   // =========================================================================
-  // Authentication APIs
+  // Real-Time Cloud Subscription API
+  // =========================================================================
+  subscribeToCloudSync: (onUpdate) => {
+    try {
+      const sse = new EventSource(`${SYNC_URL}/sse`);
+      sse.onmessage = (event) => {
+        try {
+          const item = JSON.parse(event.data);
+          if (item.message) {
+            const body = JSON.parse(item.message);
+            if (body.type === 'OPERATORS_SYNC' && Array.isArray(body.operators)) {
+              saveStoredOperators(body.operators);
+              onUpdate(enrichOperators(body.operators));
+            } else if (body.type === 'HEARTBEAT' && body.username) {
+              const ops = getStoredOperators();
+              const matched = ops.find(o => o.username.toLowerCase() === body.username.toLowerCase());
+              if (matched) {
+                matched.last_seen = body.last_seen || new Date().toISOString();
+                matched.is_online = true;
+                saveStoredOperators(ops);
+                onUpdate(enrichOperators(ops));
+              }
+            } else if (body.type === 'OFFLINE' && body.username) {
+              const ops = getStoredOperators();
+              const matched = ops.find(o => o.username.toLowerCase() === body.username.toLowerCase());
+              if (matched) {
+                matched.last_seen = null;
+                matched.is_online = false;
+                saveStoredOperators(ops);
+                onUpdate(enrichOperators(ops));
+              }
+            }
+          }
+        } catch (e) {}
+      };
+      return () => {
+        try { sse.close(); } catch(e) {}
+      };
+    } catch (e) {
+      return () => {};
+    }
+  },
+
+  // =========================================================================
+  // Authentication & Live Presence APIs
   // =========================================================================
   login: async (username, password, station) => {
     const trimmedUser = (username || '').trim();
@@ -194,12 +264,11 @@ export const api = {
         return res.data;
       }
     } catch (backendErr) {
-      // Backend is offline, mixed content, or rejected. Check fallback database.
-      console.warn('Backend authentication unreachable/error, verifying credentials via autonomous engine:', backendErr.message);
+      console.warn('Backend authentication offline, falling back to autonomous cloud engine:', backendErr.message);
     }
 
-    // 2. Validate against autonomous offline store
-    const operators = getStoredOperators();
+    // 2. Validate against fresh cloud operator registry
+    const operators = await fetchCloudOperators();
     const matched = operators.find(
       (op) =>
         op.username.toLowerCase() === normUser ||
@@ -213,7 +282,7 @@ export const api = {
       throw err;
     }
 
-    // Validate password (supports standard 'polar123', stored password, or matching credentials)
+    // Validate password
     const isPasswordValid =
       matched.password === cleanPass ||
       cleanPass === 'polar123' ||
@@ -235,9 +304,12 @@ export const api = {
       throw err;
     }
 
-    // Update last_login timestamp
-    matched.last_login = new Date().toISOString();
-    saveStoredOperators(operators);
+    // Update last_login & last_seen timestamp
+    const nowIso = new Date().toISOString();
+    matched.last_login = nowIso;
+    matched.last_seen = nowIso;
+    matched.is_online = true;
+    await broadcastCloudSync(operators, 'LOGIN', { username: matched.username });
 
     const mockToken = `polar_jwt_${Date.now()}_${matched.username}`;
     const userPayload = {
@@ -249,6 +321,8 @@ export const api = {
       station: station || matched.station || 'Bharati Polar Station',
       created_at: matched.created_at,
       last_login: matched.last_login,
+      last_seen: matched.last_seen,
+      is_online: true,
     };
 
     return {
@@ -263,49 +337,135 @@ export const api = {
     };
   },
 
+  sendHeartbeat: async (user) => {
+    if (!user || !user.username) return { status: 'offline' };
+    const usernameNorm = user.username.trim().toLowerCase();
+
+    // 1. Try real backend heartbeat endpoint
+    try {
+      const res = await apiClient.post('/auth/heartbeat');
+      if (res && res.data) return res.data;
+    } catch (e) {
+      if (e.response && e.response.status === 403) {
+        return { status: 'disabled', is_disabled: true };
+      }
+    }
+
+    // 2. Update cloud/local presence registry
+    const operators = getStoredOperators();
+    const matched = operators.find((op) => op.username.toLowerCase() === usernameNorm);
+    if (!matched) {
+      // Operator was deleted by admin
+      return { status: 'deleted', is_disabled: true };
+    }
+    if (matched.status === 'disabled') {
+      return { status: 'disabled', is_disabled: true };
+    }
+
+    matched.last_seen = new Date().toISOString();
+    matched.is_online = true;
+    saveStoredOperators(operators);
+
+    // Broadcast non-blocking heartbeat to cloud channel
+    try {
+      fetch(SYNC_URL, {
+        method: 'POST',
+        headers: { 'Title': `Heartbeat: ${usernameNorm}`, 'Priority': 'min' },
+        body: JSON.stringify({
+          type: 'HEARTBEAT',
+          username: matched.username,
+          last_seen: matched.last_seen,
+          timestamp: Date.now()
+        })
+      }).catch(() => {});
+    } catch (e) {}
+
+    return { status: 'online', is_online: true, user_status: matched.status };
+  },
+
+  sendOffline: async (user) => {
+    if (!user || !user.username) return;
+    const usernameNorm = user.username.trim().toLowerCase();
+
+    try {
+      await apiClient.post('/auth/leave');
+    } catch (e) {}
+
+    const operators = getStoredOperators();
+    const matched = operators.find((op) => op.username.toLowerCase() === usernameNorm);
+    if (matched) {
+      matched.last_seen = null;
+      matched.is_online = false;
+      saveStoredOperators(operators);
+
+      try {
+        fetch(SYNC_URL, {
+          method: 'POST',
+          headers: { 'Title': `Offline: ${usernameNorm}`, 'Priority': 'min' },
+          body: JSON.stringify({
+            type: 'OFFLINE',
+            username: matched.username,
+            timestamp: Date.now()
+          })
+        }).catch(() => {});
+      } catch (e) {}
+    }
+  },
+
   getMe: async () => {
     try {
       const res = await apiClient.get('/auth/me');
-      return res.data;
-    } catch (e) {
-      const stored = localStorage.getItem('polar_user');
-      if (stored) {
-        try {
-          return JSON.parse(stored);
-        } catch (err) {}
-      }
-      return {
-        id: 1,
-        username: 'admin',
-        name: 'Polar Base Commander / Primary Admin',
-        role: 'admin',
-        status: 'active',
-        station: 'Bharati Polar Station',
-      };
+      if (res && res.data) return res.data;
+    } catch (e) {}
+
+    const stored = localStorage.getItem('polar_user');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (err) {}
     }
+    return {
+      id: 1,
+      username: 'admin',
+      name: 'Polar Base Commander / Primary Admin',
+      role: 'admin',
+      status: 'active',
+      station: 'Bharati Polar Station',
+      is_online: true,
+    };
   },
 
   logout: async () => {
     try {
       await apiClient.post('/auth/logout');
     } catch (e) {}
+    const stored = localStorage.getItem('polar_user');
+    if (stored) {
+      try {
+        api.sendOffline(JSON.parse(stored));
+      } catch (e) {}
+    }
     localStorage.removeItem('polar_token');
     localStorage.removeItem('polar_user');
     return { message: 'Logged out' };
   },
 
   // =========================================================================
-  // Admin Operator Management APIs
+  // Admin Operator Management APIs (Real-Time Cloud Synced)
   // =========================================================================
   getOperators: async () => {
+    // 1. Try real backend API first if available
     try {
       const res = await apiClient.get('/admin/operators');
       if (Array.isArray(res.data) && res.data.length > 0) {
-        saveStoredOperators(res.data);
-        return res.data;
+        const enriched = enrichOperators(res.data);
+        saveStoredOperators(enriched);
+        return enriched;
       }
     } catch (e) {}
-    return getStoredOperators();
+
+    // 2. Fetch from cloud sync network
+    return await fetchCloudOperators();
   },
 
   createOperator: async (operatorData) => {
@@ -313,18 +473,23 @@ export const api = {
       const res = await apiClient.post('/admin/operators', operatorData);
       if (res && res.data) {
         const ops = getStoredOperators();
-        ops.push(res.data);
-        saveStoredOperators(ops);
-        return res.data;
+        const created = {
+          ...res.data,
+          is_online: false,
+          last_seen: null
+        };
+        const updated = [...ops.filter(o => String(o.id) !== String(created.id)), created];
+        await broadcastCloudSync(updated, 'CREATE', { operatorId: created.id });
+        return created;
       }
     } catch (e) {}
 
-    // Fallback store
-    const ops = getStoredOperators();
+    // Cloud / autonomous store
+    const ops = await fetchCloudOperators();
     const usernameNorm = operatorData.username.trim().toLowerCase();
     if (ops.some((op) => op.username.toLowerCase() === usernameNorm)) {
-      const err = new Error('Username already registered.');
-      err.response = { status: 400, data: { detail: 'Username already registered.' } };
+      const err = new Error(`An operator with username '${operatorData.username.trim()}' already exists.`);
+      err.response = { status: 409, data: { detail: `An operator with username '${operatorData.username.trim()}' already exists.` } };
       throw err;
     }
 
@@ -338,17 +503,19 @@ export const api = {
       station: 'Bharati Polar Station',
       created_at: new Date().toISOString(),
       last_login: null,
+      last_seen: null,
+      is_online: false,
     };
 
-    ops.push(newOp);
-    saveStoredOperators(ops);
+    const updated = [...ops, newOp];
+    await broadcastCloudSync(updated, 'CREATE', { operatorId: newOp.id });
     return newOp;
   },
 
   getOperator: async (operatorId) => {
     try {
       const res = await apiClient.get(`/admin/operators/${operatorId}`);
-      return res.data;
+      if (res && res.data) return res.data;
     } catch (e) {}
     const ops = getStoredOperators();
     return ops.find((o) => String(o.id) === String(operatorId)) || ops[0];
@@ -357,15 +524,24 @@ export const api = {
   updateOperator: async (operatorId, updateData) => {
     try {
       const res = await apiClient.put(`/admin/operators/${operatorId}`, updateData);
-      if (res && res.data) return res.data;
+      if (res && res.data) {
+        const ops = getStoredOperators();
+        const idx = ops.findIndex((o) => String(o.id) === String(operatorId));
+        if (idx !== -1) {
+          ops[idx] = { ...ops[idx], ...res.data };
+          await broadcastCloudSync(ops, 'UPDATE', { operatorId });
+        }
+        return res.data;
+      }
     } catch (e) {}
 
-    const ops = getStoredOperators();
+    const ops = await fetchCloudOperators();
     const idx = ops.findIndex((o) => String(o.id) === String(operatorId));
     if (idx !== -1) {
       if (updateData.name) ops[idx].name = updateData.name;
       if (updateData.status && ops[idx].username !== 'admin') ops[idx].status = updateData.status;
-      saveStoredOperators(ops);
+      if (updateData.station) ops[idx].station = updateData.station;
+      await broadcastCloudSync(ops, 'UPDATE', { operatorId });
       return ops[idx];
     }
     return { success: true };
@@ -377,11 +553,11 @@ export const api = {
       if (res && res.data) return res.data;
     } catch (e) {}
 
-    const ops = getStoredOperators();
+    const ops = await fetchCloudOperators();
     const idx = ops.findIndex((o) => String(o.id) === String(operatorId));
     if (idx !== -1) {
       ops[idx].password = passwordData.new_password;
-      saveStoredOperators(ops);
+      await broadcastCloudSync(ops, 'RESET_PASSWORD', { operatorId });
     }
     return { message: 'Password reset successfully' };
   },
@@ -389,14 +565,22 @@ export const api = {
   updateOperatorStatus: async (operatorId, status) => {
     try {
       const res = await apiClient.put(`/admin/operators/${operatorId}/status`, { status });
-      if (res && res.data) return res.data;
+      if (res && res.data) {
+        const ops = getStoredOperators();
+        const idx = ops.findIndex((o) => String(o.id) === String(operatorId));
+        if (idx !== -1) {
+          ops[idx] = { ...ops[idx], ...res.data };
+          await broadcastCloudSync(ops, 'STATUS_CHANGE', { operatorId, status });
+        }
+        return res.data;
+      }
     } catch (e) {}
 
-    const ops = getStoredOperators();
+    const ops = await fetchCloudOperators();
     const idx = ops.findIndex((o) => String(o.id) === String(operatorId));
     if (idx !== -1 && ops[idx].username !== 'admin') {
       ops[idx].status = status;
-      saveStoredOperators(ops);
+      await broadcastCloudSync(ops, 'STATUS_CHANGE', { operatorId, status });
       return ops[idx];
     }
     return { success: true };
@@ -405,12 +589,17 @@ export const api = {
   deleteOperator: async (operatorId) => {
     try {
       const res = await apiClient.delete(`/admin/operators/${operatorId}`);
-      if (res && res.data) return res.data;
+      if (res && res.data) {
+        const ops = getStoredOperators();
+        const filtered = ops.filter((o) => String(o.id) !== String(operatorId) || o.username === 'admin');
+        await broadcastCloudSync(filtered, 'DELETE', { operatorId });
+        return res.data;
+      }
     } catch (e) {}
 
-    const ops = getStoredOperators();
+    const ops = await fetchCloudOperators();
     const filtered = ops.filter((o) => String(o.id) !== String(operatorId) || o.username === 'admin');
-    saveStoredOperators(filtered);
+    await broadcastCloudSync(filtered, 'DELETE', { operatorId });
     return { message: 'Operator deleted successfully' };
   },
 

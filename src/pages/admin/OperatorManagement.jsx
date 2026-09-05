@@ -23,6 +23,8 @@ export default function OperatorManagement() {
   const [operators, setOperators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
+  const [filter, setFilter] = useState('all'); // 'all', 'online', 'disabled', 'admin'
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Modals state
   const [showAddModal, setShowAddModal] = useState(false);
@@ -50,21 +52,43 @@ export default function OperatorManagement() {
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch operators list
-  const fetchOperators = async () => {
+  // Fetch operators list (with background polling support)
+  const fetchOperators = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const data = await api.getOperators();
-      setOperators(data);
+      if (Array.isArray(data)) {
+        setOperators(data);
+      }
     } catch (err) {
-      showToast(err.response?.data?.detail || 'Failed to load operators', 'error');
+      if (showLoading) {
+        showToast(err.response?.data?.detail || 'Failed to load operators', 'error');
+      }
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
+  // Initial fetch, SSE real-time cloud subscription & 4-second polling loop
   useEffect(() => {
-    fetchOperators();
+    fetchOperators(true);
+
+    // 1. Subscribe to instant real-time Server-Sent Events (SSE)
+    const unsubscribe = api.subscribeToCloudSync((updatedOps) => {
+      if (Array.isArray(updatedOps) && updatedOps.length > 0) {
+        setOperators(updatedOps);
+      }
+    });
+
+    // 2. Fallback polling loop (every 4 seconds)
+    const interval = setInterval(() => {
+      fetchOperators(false);
+    }, 4000);
+
+    return () => {
+      clearInterval(interval);
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
   }, []);
 
   const showToast = (message, type = 'success') => {
@@ -95,10 +119,10 @@ export default function OperatorManagement() {
         confirm_password: addForm.confirm_password,
         status: addForm.status,
       });
-      showToast('Operator created successfully.', 'success');
+      showToast(`Operator '${addForm.username.trim()}' created and synced successfully.`, 'success');
       setShowAddModal(false);
       setAddForm({ username: '', name: '', password: '', confirm_password: '', status: 'active' });
-      fetchOperators();
+      fetchOperators(false);
     } catch (err) {
       setFormError(err.response?.data?.detail || 'Failed to create operator.');
     } finally {
@@ -123,9 +147,9 @@ export default function OperatorManagement() {
         name: editForm.name.trim(),
         status: editForm.status,
       });
-      showToast('Operator updated successfully.', 'success');
+      showToast(`Operator '${selectedOp.username}' updated successfully.`, 'success');
       setShowEditModal(false);
-      fetchOperators();
+      fetchOperators(false);
     } catch (err) {
       setFormError(err.response?.data?.detail || 'Failed to update operator.');
     } finally {
@@ -161,6 +185,7 @@ export default function OperatorManagement() {
       });
       showToast(`Password reset successfully for operator '${selectedOp.username}'.`, 'success');
       setShowResetModal(false);
+      fetchOperators(false);
     } catch (err) {
       setFormError(err.response?.data?.detail || 'Failed to reset password.');
     } finally {
@@ -178,7 +203,7 @@ export default function OperatorManagement() {
     try {
       await api.updateOperatorStatus(op.id, newStatus);
       showToast(`Operator '${op.username}' is now ${newStatus.toUpperCase()}.`, 'success');
-      fetchOperators();
+      fetchOperators(false);
     } catch (err) {
       showToast(err.response?.data?.detail || 'Failed to update operator status', 'error');
     }
@@ -200,7 +225,7 @@ export default function OperatorManagement() {
       await api.deleteOperator(selectedOp.id);
       showToast(`Operator '${selectedOp.username}' deleted successfully.`, 'success');
       setShowDeleteModal(false);
-      fetchOperators();
+      fetchOperators(false);
     } catch (err) {
       showToast(err.response?.data?.detail || 'Failed to delete operator', 'error');
     } finally {
@@ -218,15 +243,44 @@ export default function OperatorManagement() {
     }
   };
 
-  const formatTime = (dateStr) => {
-    if (!dateStr) return '--';
+  const formatLastSeen = (op) => {
+    if (op.is_online) return 'Active now';
+    const target = op.last_seen || op.last_login;
+    if (!target) return 'Never active';
     try {
-      const d = new Date(dateStr);
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const diffMs = Date.now() - new Date(target).getTime();
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHr = Math.floor(diffMin / 60);
+      const diffDays = Math.floor(diffHr / 24);
+      if (diffSec < 45) return 'Active just now';
+      if (diffMin < 60) return `Active ${diffMin}m ago`;
+      if (diffHr < 24) return `Active ${diffHr}h ago`;
+      return `Active ${diffDays}d ago`;
     } catch {
-      return dateStr;
+      return '--';
     }
   };
+
+  // Computed metrics & Filtered operators
+  const onlineCount = operators.filter((o) => o.is_online).length;
+  const disabledCount = operators.filter((o) => o.status === 'disabled').length;
+  const adminCount = operators.filter((o) => o.role === 'admin').length;
+
+  const filteredOperators = operators.filter((op) => {
+    if (filter === 'online' && !op.is_online) return false;
+    if (filter === 'disabled' && op.status !== 'disabled') return false;
+    if (filter === 'admin' && op.role !== 'admin') return false;
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchUser = op.username?.toLowerCase().includes(q);
+      const matchName = op.name?.toLowerCase().includes(q);
+      const matchRole = op.role?.toLowerCase().includes(q);
+      return matchUser || matchName || matchRole;
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -263,18 +317,18 @@ export default function OperatorManagement() {
             </span>
           </div>
           <p className="text-xs text-[#89A7B7] mt-1">
-            Manage authorized Polar Energy system operators, role credentials, and access statuses.
+            Real-time multi-operator access management & live online telemetry monitoring.
           </p>
         </div>
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <button
-            onClick={fetchOperators}
+            onClick={() => fetchOperators(true)}
             disabled={loading}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-[#0B1D29] hover:bg-[#0E2432] border border-[#102B3B] text-xs font-bold text-[#89A7B7] hover:text-[#EFFFFF] transition-colors cursor-pointer min-h-[40px]"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
+            <span>Sync</span>
           </button>
 
           <button
@@ -290,26 +344,142 @@ export default function OperatorManagement() {
         </div>
       </div>
 
+      {/* Live Presence Status Bar & Quick Filters */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="p-4 rounded-xl bg-[#0B1D29] border border-[#102B3B] flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#35D47A]/15 border border-[#35D47A]/30 flex items-center justify-center text-[#35D47A]">
+              <UserCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-[#89A7B7]">ONLINE RIGHT NOW</p>
+              <p className="text-lg font-black font-mono text-[#35D47A] flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#35D47A] pulse-active" />
+                {onlineCount} {onlineCount === 1 ? 'OPERATOR' : 'OPERATORS'}
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-[#35D47A]/20 text-[#35D47A] font-mono font-bold">
+            LIVE SYNC
+          </span>
+        </div>
+
+        <div className="p-4 rounded-xl bg-[#0B1D29] border border-[#102B3B] flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#48D5FF]/15 border border-[#48D5FF]/30 flex items-center justify-center text-[#48D5FF]">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-[#89A7B7]">REGISTERED OPERATORS</p>
+              <p className="text-lg font-black font-mono text-[#EFFFFF]">
+                {operators.length} ACCOUNTS
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-[#48D5FF]/20 text-[#48D5FF] font-mono font-bold">
+            {adminCount} ADMIN
+          </span>
+        </div>
+
+        <div className="p-4 rounded-xl bg-[#0B1D29] border border-[#102B3B] flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#FF6257]/15 border border-[#FF6257]/30 flex items-center justify-center text-[#FF6257]">
+              <UserX className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-[#89A7B7]">DISABLED ACCOUNTS</p>
+              <p className="text-lg font-black font-mono text-[#FF6257]">
+                {disabledCount} DISABLED
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-[#FF6257]/20 text-[#FF6257] font-mono font-bold">
+            RESTRICTED
+          </span>
+        </div>
+      </div>
+
+      {/* Filter Tabs & Search Box */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+          <button
+            onClick={() => setFilter('all')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
+              filter === 'all'
+                ? 'bg-[#48D5FF] text-black shadow-md shadow-[#48D5FF]/20'
+                : 'bg-[#0B1D29] text-[#89A7B7] hover:text-[#EFFFFF] border border-[#102B3B]'
+            }`}
+          >
+            All Accounts ({operators.length})
+          </button>
+
+          <button
+            onClick={() => setFilter('online')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
+              filter === 'online'
+                ? 'bg-[#35D47A] text-black shadow-md shadow-[#35D47A]/20'
+                : 'bg-[#0B1D29] text-[#89A7B7] hover:text-[#EFFFFF] border border-[#102B3B]'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-[#35D47A] pulse-active" />
+            Online Now ({onlineCount})
+          </button>
+
+          <button
+            onClick={() => setFilter('admin')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
+              filter === 'admin'
+                ? 'bg-[#299BD7] text-white shadow-md shadow-[#299BD7]/20'
+                : 'bg-[#0B1D29] text-[#89A7B7] hover:text-[#EFFFFF] border border-[#102B3B]'
+            }`}
+          >
+            Admins ({adminCount})
+          </button>
+
+          <button
+            onClick={() => setFilter('disabled')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
+              filter === 'disabled'
+                ? 'bg-[#FF6257] text-white shadow-md shadow-[#FF6257]/20'
+                : 'bg-[#0B1D29] text-[#89A7B7] hover:text-[#EFFFFF] border border-[#102B3B]'
+            }`}
+          >
+            Disabled ({disabledCount})
+          </button>
+        </div>
+
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search operators by name or role..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full sm:w-64 px-3.5 py-1.5 bg-[#0B1D29] border border-[#102B3B] focus:border-[#48D5FF] rounded-lg text-xs text-[#EFFFFF] outline-none transition-colors"
+          />
+        </div>
+      </div>
+
       {/* Operator Table Card */}
       <div className="rounded-2xl bg-[#0B1D29] border border-[#102B3B] shadow-2xl overflow-hidden">
         <div className="p-4 border-b border-[#102B3B] flex items-center justify-between">
-          <h3 className="text-xs font-black tracking-wider text-[#EFFFFF] uppercase">
-            AUTHORIZED SYSTEM ACCOUNTS
+          <h3 className="text-xs font-black tracking-wider text-[#EFFFFF] uppercase flex items-center gap-2">
+            <span>AUTHORIZED SYSTEM ACCOUNTS</span>
+            <span className="w-2 h-2 rounded-full bg-[#35D47A] animate-ping" />
           </h3>
           <span className="text-xs font-mono font-bold text-[#48D5FF]">
-            {operators.length} TOTAL USERS
+            SHOWING {filteredOperators.length} OF {operators.length} USERS
           </span>
         </div>
 
         <div className="overflow-x-auto no-scrollbar">
-          <table className="w-full text-left border-collapse min-w-[620px]">
+          <table className="w-full text-left border-collapse min-w-[680px]">
             <thead>
               <tr className="border-b border-[#102B3B] bg-[#06131D]/60 text-[10px] font-extrabold uppercase tracking-wider text-[#89A7B7]">
                 <th className="py-3.5 px-4">OPERATOR NAME</th>
                 <th className="py-3.5 px-4">ROLE</th>
-                <th className="py-3.5 px-4">STATUS</th>
+                <th className="py-3.5 px-4">ACCOUNT STATUS</th>
+                <th className="py-3.5 px-4">LIVE PRESENCE</th>
                 <th className="py-3.5 px-4">CREATED DATE</th>
-                <th className="py-3.5 px-4">LAST LOGIN</th>
                 <th className="py-3.5 px-4 text-right">ACTIONS</th>
               </tr>
             </thead>
@@ -318,19 +488,20 @@ export default function OperatorManagement() {
                 <tr>
                   <td colSpan="6" className="py-8 text-center text-[#89A7B7]">
                     <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-[#48D5FF]" />
-                    <span>Loading authorized operator directory...</span>
+                    <span>Synchronizing authorized operator directory...</span>
                   </td>
                 </tr>
-              ) : operators.length === 0 ? (
+              ) : filteredOperators.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="py-8 text-center text-[#89A7B7]">
-                    No operator accounts found. Click "ADD OPERATOR" to create one.
+                    No operator accounts match the active filter.
                   </td>
                 </tr>
               ) : (
-                operators.map((op) => {
+                filteredOperators.map((op) => {
                   const isActive = op.status === 'active';
                   const isPrimaryAdmin = op.username === 'admin';
+                  const isOnline = !!op.is_online;
 
                   return (
                     <tr
@@ -341,20 +512,30 @@ export default function OperatorManagement() {
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
                           <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${
+                            className={`relative w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${
                               op.role === 'admin'
                                 ? 'bg-gradient-to-tr from-[#299BD7] to-[#48D5FF] text-black shadow-md shadow-[#48D5FF]/20'
                                 : 'bg-[#102B3B] text-[#48D5FF]'
-                            }`}
+                            } ${isOnline ? 'ring-2 ring-[#35D47A] ring-offset-1 ring-offset-[#06131D]' : ''}`}
                           >
                             {op.role === 'admin' ? (
                               <Shield className="w-4 h-4" />
                             ) : (
                               <Users className="w-4 h-4" />
                             )}
+                            {isOnline && (
+                              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#35D47A] border-2 border-[#06131D] animate-pulse" />
+                            )}
                           </div>
                           <div>
-                            <p className="font-bold text-[#EFFFFF] font-mono">{op.username}</p>
+                            <p className="font-bold text-[#EFFFFF] font-mono flex items-center gap-1.5">
+                              <span>{op.username}</span>
+                              {isOnline && (
+                                <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#35D47A]/20 text-[#35D47A] border border-[#35D47A]/40 font-bold">
+                                  ONLINE
+                                </span>
+                              )}
+                            </p>
                             <p className="text-[10px] text-[#89A7B7]">{op.name || op.station}</p>
                           </div>
                         </div>
@@ -373,10 +554,10 @@ export default function OperatorManagement() {
                         </span>
                       </td>
 
-                      {/* Status */}
+                      {/* Account Status */}
                       <td className="py-3.5 px-4">
                         <span
-                          className={`inline-flex items-center gap-1.5 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                          className={`inline-flex items-center gap-1.5 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full ${
                             isActive
                               ? 'bg-[#35D47A]/20 text-[#35D47A] border border-[#35D47A]/30'
                               : 'bg-[#FF6257]/20 text-[#FF6257] border border-[#FF6257]/30'
@@ -384,21 +565,31 @@ export default function OperatorManagement() {
                         >
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
-                              isActive ? 'bg-[#35D47A] pulse-active' : 'bg-[#FF6257]'
+                              isActive ? 'bg-[#35D47A]' : 'bg-[#FF6257]'
                             }`}
                           />
                           {op.status.toUpperCase()}
                         </span>
                       </td>
 
+                      {/* Live Presence */}
+                      <td className="py-3.5 px-4">
+                        {isOnline ? (
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-black text-[#35D47A] px-2.5 py-0.5 rounded-full bg-[#35D47A]/15 border border-[#35D47A]/30">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#35D47A] pulse-active" />
+                            ONLINE NOW
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#89A7B7]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-600 mr-0.5" />
+                            {formatLastSeen(op)}
+                          </span>
+                        )}
+                      </td>
+
                       {/* Created Date */}
                       <td className="py-3.5 px-4 text-[#89A7B7] font-mono text-[11px]">
                         {formatDate(op.created_at)}
-                      </td>
-
-                      {/* Last Login */}
-                      <td className="py-3.5 px-4 text-[#89A7B7] font-mono text-[11px]">
-                        {op.last_login ? `${formatDate(op.last_login)} ${formatTime(op.last_login)}` : '--'}
                       </td>
 
                       {/* Actions */}

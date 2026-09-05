@@ -58,6 +58,46 @@ export function AuthProvider({ children }) {
     initAuth();
   }, []);
 
+  // Live Online Presence Heartbeat (Every 10 seconds while logged in)
+  useEffect(() => {
+    if (!user || !token) return;
+
+    // Send immediate initial heartbeat
+    api.sendHeartbeat(user).then((res) => {
+      if (res && res.is_disabled) {
+        alert('Your operator account has been disabled by the system administrator.');
+        logout();
+      }
+    }).catch(() => {});
+
+    // Periodic heartbeat loop
+    const interval = setInterval(async () => {
+      try {
+        const res = await api.sendHeartbeat(user);
+        if (res && (res.is_disabled || res.account_status === 'disabled')) {
+          alert('Your operator account has been disabled by the system administrator.');
+          logout();
+        }
+      } catch (err) {
+        if (err.response && err.response.status === 403) {
+          alert('Your operator account has been disabled by the system administrator.');
+          logout();
+        }
+      }
+    }, 10000);
+
+    // Send offline signal on tab/window close
+    const handleUnload = () => {
+      api.sendOffline(user);
+    };
+    window.addEventListener('beforeunload', handleUnload);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('beforeunload', handleUnload);
+    };
+  }, [user?.username, token]);
+
   const login = async (username, password, station) => {
     const res = await api.login(username, password, station);
     const authToken = res.token || res.access_token;
@@ -75,7 +115,9 @@ export function AuthProvider({ children }) {
       status: res.status || res.user?.status || 'active',
       station: res.station || station || 'Bharati Polar Station',
       last_login: res.user?.last_login || new Date().toISOString(),
+      last_seen: new Date().toISOString(),
       created_at: res.user?.created_at,
+      is_online: true,
     };
 
     localStorage.setItem('polar_token', authToken);
@@ -87,6 +129,9 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
+      if (user) {
+        await api.sendOffline(user);
+      }
       if (token) {
         await api.logout();
       }
